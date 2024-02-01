@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model board_likes {
+  id        Int     @id @default(autoincrement())
+  board_id  Int
+  member_id Int
+  boards    boards  @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_boards_to_board_likes")
+  members   members @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_board_likes")
+}
+
+model board_tags {
+  id       Int    @id @default(autoincrement())
+  board_id Int
+  tag_id   Int
+  boards   boards @relation(fields: [board_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_boards_to_board_tags")
+  tags     tags   @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tags_to_board_tags")
+}
+
+model board_types {
+  id     Int      @id
+  name   String   @db.VarChar
+  boards boards[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model boards {
+  id          Int           @id @default(autoincrement())
+  type_id     Int
+  author      Int
+  title       String        @db.VarChar(50)
+  overview    String?
+  content     String?
+  address     String?
+  created_at  DateTime?     @db.Timestamp(6)
+  updated_at  DateTime?     @db.Timestamp(6)
+  board_likes board_likes[]
+  board_tags  board_tags[]
+  board_types board_types   @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_board_types_to_boards")
+  members     members       @relation(fields: [author], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_boards")
+}
+
+model chatroom_messages {
+  id          Int       @id
+  chatroom_id String    @db.Uuid
+  sender      Int
+  content     Json?
+  created_at  DateTime? @db.Timestamp(6)
+  chatrooms   chatrooms @relation(fields: [chatroom_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_chatrooms_to_chatroom_messages")
+  members     members   @relation(fields: [sender], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_chatroom_messages")
+}
+
+model chatroom_participants {
+  id          Int       @id
+  chatroom_id String    @db.Uuid
+  member_id   Int
+  chatrooms   chatrooms @relation(fields: [chatroom_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_chatrooms_to_chatroom_participants")
+  members     members   @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_chatroom_participants")
+}
+
+model chatrooms {
+  id                    String                  @id @db.Uuid
+  chatroom_messages     chatroom_messages[]
+  chatroom_participants chatroom_participants[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model guide_language_certifications {
+  id                        Int                     @id @default(autoincrement())
+  guide_id                  Int
+  language_certification_id Int
+  guide_profile             guide_profile           @relation(fields: [guide_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_guide_profile_to_guide_language_certifications")
+  language_certifications   language_certifications @relation(fields: [language_certification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_language_certifications_to_guide_language_certifications")
+}
+
+model guide_profile {
+  id                            Int                             @id
+  avatar                        String?                         @db.VarChar
+  gender                        String?                         @db.VarChar
+  temperature                   Float?                          @db.Real
+  service                       String?
+  guide_language_certifications guide_language_certifications[]
+  members                       members                         @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_guide_profile")
+  guide_reviews                 guide_reviews[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model guide_reviews {
+  id                  Int           @id
+  reviewer            Int
+  guide               Int
+  communication_score Int           @default(5)
+  correctness_score   Int           @default(5)
+  location_score      Int           @default(5)
+  content             String?
+  created_at          DateTime?     @db.Timestamp(6)
+  updated_at          DateTime?     @db.Timestamp(6)
+  guide_profile       guide_profile @relation(fields: [guide], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_guide_profile_to_guide_reviews")
+  user_profile        user_profile  @relation(fields: [reviewer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_profile_to_guide_reviews")
+}
+
+model language_certifications {
+  id                            Int                             @id @default(autoincrement())
+  language_id                   Int
+  name                          String                          @db.VarChar
+  guide_language_certifications guide_language_certifications[]
+  languages                     languages                       @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_languages_to_language_certifications")
+}
+
+model languages {
+  id                      Int                       @id @default(autoincrement())
+  name                    String                    @db.VarChar
+  language_certifications language_certifications[]
+  member_languages        member_languages[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model member_languages {
+  id          Int       @id @default(autoincrement())
+  member_id   Int
+  language_id Int
+  languages   languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_languages_to_member_languages")
+  members     members   @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_member_languages")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model member_schedules {
+  id          Int       @id @default(autoincrement())
+  member_id   Int
+  schedule_id Int
+  members     members   @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_member_schedules")
+  schedules   schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_schedules_to_member_schedules")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model member_tags {
+  id        Int     @id @default(autoincrement())
+  member_id Int
+  tag_id    Int
+  members   members @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_member_tags")
+  tags      tags    @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tags_to_member_tags")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model members {
+  id                    Int                     @id @default(autoincrement())
+  email                 String                  @unique @db.VarChar(320)
+  nickname              String                  @unique @db.VarChar(20)
+  password              String                  @db.VarChar(180)
+  birthdate             DateTime?               @db.Date
+  status                String                  @default("public") @db.VarChar
+  role_id               Int                     @default(1)
+  created_at            DateTime?               @db.Timestamp(6)
+  updated_at            DateTime?               @db.Timestamp(6)
+  board_likes           board_likes[]
+  boards                boards[]
+  chatroom_messages     chatroom_messages[]
+  chatroom_participants chatroom_participants[]
+  guide_profile         guide_profile?
+  member_languages      member_languages[]
+  member_schedules      member_schedules[]
+  member_tags           member_tags[]
+  roles                 roles                   @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_roles_to_members")
+  place_reviews         place_reviews[]
+  plans                 plans[]
+  user_profile          user_profile?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model place_reviews {
+  id         Int       @id @default(autoincrement())
+  member_id  Int
+  place_id   Int
+  score      Int       @default(5)
+  content    String?
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  members    members   @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_place_reviews")
+  places     places    @relation(fields: [place_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_places_to_place_reviews")
+}
+
+model places {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar
+  address       String?
+  description   String?
+  photo         String?         @db.VarChar
+  lat           Float?
+  lng           Float?
+  place_reviews place_reviews[]
+  schedules     schedules[]
+}
+
+model plan_schedules {
+  id          Int       @id @default(autoincrement())
+  plan_id     Int
+  schedule_id Int
+  plans       plans     @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_plans_to_plan_schedules")
+  schedules   schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_schedules_to_plan_schedules")
+}
+
+model plans {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar
+  description    String?
+  status         String           @default("public") @db.VarChar
+  member_id      Int
+  plan_schedules plan_schedules[]
+  members        members          @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_plans")
+}
+
+
+model roles {
+  id      Int       @id @default(autoincrement())
+  name    String    @db.VarChar
+  members members[]
+}
+model schedules {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar
+  description      String?
+  place_id         Int?
+  start_time       DateTime?          @db.Timestamp(6)
+  end_time         DateTime?          @db.Timestamp(6)
+  member_schedules member_schedules[]
+  plan_schedules   plan_schedules[]
+  places           places?            @relation(fields: [place_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_places_to_schedules")
+}
+
+model tags {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @db.VarChar(20)
+  board_tags  board_tags[]
+  member_tags member_tags[]
+}
+
+model user_profile {
+  id            Int             @id
+  avatar        String?         @db.VarChar
+  gender        String?         @db.VarChar
+  guide_reviews guide_reviews[]
+  members       members         @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_members_to_user_profile")
+}
