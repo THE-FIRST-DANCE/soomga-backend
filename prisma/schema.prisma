@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,4 +7,274 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Member {
+  id       Int      @id @default(autoincrement())
+  email     String   @unique 
+  nickname  String   @unique
+  password  String
+  status    MemberStatus? @default(ACTIVE)
+  role      Role?     @default(USER)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime? 
 
+  tags      MemberTag[]
+  languages  MemberLanguage[]
+  boards    Board[]
+  boardLikes BoardLike[]
+  plans     Plan[]
+  schedules MemberSchedule[]
+  chatrooms ChatroomParticipants[]
+  messages  ChatroomMessage[]
+
+  guideProfile GuideProfile?
+}
+
+model GuideProfile {
+  id        Int  @id
+  temperatrue Float  @default(36.5)
+  service   String 
+
+  member Member? @relation(fields: [id], references: [id])
+  languageCertifications GuideLanguageCertification[]
+}
+
+model GuideReview {
+  id        Int      @id @default(autoincrement())
+  communicationScore Int @default(5) 
+  kindnessScore Int @default(5)
+  locationScore Int @default(5)
+  content String?
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Board {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  type      BoardType
+  status    AcessStatus @default(PUBLIC)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  tags      BoardTag[]
+  likes     BoardLike[]
+
+  authorId  Int?
+  author    Member?  @relation(fields: [authorId], references: [id])
+}
+
+model BoardLike {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime? @default(now())
+
+  boardId   Int
+  board     Board    @relation(fields: [boardId], references: [id])
+
+  memberId  Int
+  member    Member   @relation(fields: [memberId], references: [id])
+}
+
+model Tag {
+  id       Int      @id @default(autoincrement())
+  name     String   @unique
+
+  members  MemberTag[]
+  boards   BoardTag[]
+}
+
+model MemberTag {
+  id       Int      @id @default(autoincrement())
+
+  memberId Int
+  member   Member   @relation(fields: [memberId], references: [id])
+
+  tagId    Int
+  tag      Tag      @relation(fields: [tagId], references: [id])
+}
+
+model BoardTag {
+  id       Int      @id @default(autoincrement())
+
+  boardId  Int
+  board    Board    @relation(fields: [boardId], references: [id])
+
+  tagId    Int
+  tag      Tag      @relation(fields: [tagId], references: [id])
+}
+
+model Language {
+  id       Int      @id @default(autoincrement())
+  name     String   @unique
+
+  certifications LanguageCertification[]
+  members        MemberLanguage[]
+}
+
+model MemberLanguage {
+  id        Int      @id @default(autoincrement())
+
+  memberId  Int
+  member    Member   @relation(fields: [memberId], references: [id])
+
+  languageId Int
+  language   Language @relation(fields: [languageId], references: [id])
+}
+
+model LanguageCertification {
+  id        Int      @id @default(autoincrement())
+  name      String
+
+  guideLanguageCertifications GuideLanguageCertification[]
+
+  languageId Int
+  language   Language @relation(fields: [languageId], references: [id])
+}
+
+model GuideLanguageCertification {
+  id        Int      @id @default(autoincrement())
+
+  guideId   Int
+  guide     GuideProfile @relation(fields: [guideId], references: [id])
+
+  languageCertificationId Int
+  languageCertification   LanguageCertification @relation(fields: [languageCertificationId], references: [id])
+}
+
+model Plan {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  status    AcessStatus @default(PUBLIC)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  authorId  Int?
+  author    Member?  @relation(fields: [authorId], references: [id])
+
+  schedules PlanSchedule[]
+}
+
+model PlanSchedule {
+  id       Int      @id @default(autoincrement())
+  sequence Int
+
+  planId    Int
+  plan      Plan     @relation(fields: [planId], references: [id])
+
+  scheduleId Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+}
+
+model Schedule {
+  id        Int      @id @default(autoincrement())
+  name      String
+  description String
+  startTime DateTime
+  endTime   DateTime
+
+  placeId   Int?
+  place     Place?    @relation(fields: [placeId], references: [id])
+
+  plans     PlanSchedule[]
+  members  MemberSchedule[]
+}
+
+model MemberSchedule {
+  id        Int      @id @default(autoincrement())
+  
+  memberId  Int
+  member    Member   @relation(fields: [memberId], references: [id])
+
+  scheduleId Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+}
+
+model Place {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String?
+  description String?
+  photo     String?
+  latitude  Float
+  longitude Float
+
+  schedules Schedule[]
+  reviews   PlaceReview[]
+}
+
+model PlaceReview {
+  id        Int      @id @default(autoincrement())
+  score    Int
+  content String?
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  placeId   Int
+  place     Place    @relation(fields: [placeId], references: [id])
+}
+
+model Chatroom {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime? @default(now())
+  deletedAt DateTime?
+
+  members   ChatroomParticipants[]
+  messages  ChatroomMessage[]
+}
+
+model ChatroomParticipants {
+  id        Int      @id @default(autoincrement())
+
+  chatroomId Int
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
+
+  memberId   Int
+  member     Member   @relation(fields: [memberId], references: [id])
+}
+
+model ChatroomMessage {
+  id        Int      @id @default(autoincrement())
+  content   Json
+  createdAt DateTime? @default(now())
+
+  chatroomId Int
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
+
+  memberId   Int
+  sender    Member   @relation(fields: [memberId], references: [id])
+}
+
+
+enum Role {
+  USER
+  GUIDE 
+  ADMIN 
+}
+
+enum Gender {
+  MALE 
+  FEMALE 
+}
+
+enum MemberStatus {
+  ACTIVE 
+  INACTIVE 
+  DELETED
+}
+
+enum AcessStatus {
+  PUBLIC 
+  PRIVATE 
+  DELETED
+}
+
+enum BoardType {
+  TRIP 
+  SOS 
+  NOTICE 
+}
