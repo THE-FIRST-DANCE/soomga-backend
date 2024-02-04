@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateMemberDto } from './dto/create-member.dto';
+import ErrorMessage from '../../shared/constants/error-messages.constants';
 
 @Injectable()
 export class MembersService {
@@ -15,9 +17,9 @@ export class MembersService {
     });
   }
 
-  async create(data: any) {
+  async create(createMemberDto: CreateMemberDto) {
     return this.prismaService.member.create({
-      data,
+      data: createMemberDto,
     });
   }
 
@@ -32,5 +34,33 @@ export class MembersService {
     return this.prismaService.member.delete({
       where: { id },
     });
+  }
+
+  async findMemberByEmail(email: string) {
+    return this.prismaService.member.findUnique({
+      where: { email },
+    });
+  }
+
+  async findMemberByNickname(nickname: string) {
+    return this.prismaService.member.findUnique({
+      where: { nickname },
+    });
+  }
+
+  async checkValidEmail(email: string) {
+    const member = await this.findMemberByEmail(email);
+    if (member) {
+      throw new ConflictException(ErrorMessage.EMAIL_EXISTS);
+    }
+    return true;
+  }
+
+  async checkValidNickname(nickname: string) {
+    const member = await this.findMemberByNickname(nickname);
+    if (member) {
+      throw new ConflictException(ErrorMessage.NICKNAME_EXISTS);
+    }
+    return true;
   }
 }
