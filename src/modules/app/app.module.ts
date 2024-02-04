@@ -8,9 +8,11 @@ import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisConfig } from 'src/configs/config.interface';
 import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     MembersModule,
     LoggerModule,
     ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
