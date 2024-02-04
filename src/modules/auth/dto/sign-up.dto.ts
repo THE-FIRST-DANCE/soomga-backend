@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
 import {
   IsDateString,
   IsEmail,
@@ -11,7 +10,7 @@ import {
 } from 'class-validator';
 import { Match } from '../../../decorators/match.decorator';
 
-export class CreateMemberDto implements Prisma.MemberCreateInput {
+export class SignUpDto {
   @ApiProperty()
   @IsString()
   @IsEmail({}, { message: '이메일 형식이 아닙니다.' })
@@ -30,6 +29,11 @@ export class CreateMemberDto implements Prisma.MemberCreateInput {
     message: '비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.',
   })
   password: string;
+
+  @ApiProperty()
+  @IsString()
+  @Match('password')
+  passwordConfirm: string;
 
   @ApiProperty()
   @IsOptional()
