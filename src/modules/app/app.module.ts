@@ -6,9 +6,11 @@ import { GLOBAL_CONFIG } from 'src/configs/global.config';
 import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisConfig } from 'src/configs/config.interface';
+import { LoggerModule } from '../logger/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
     ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
     RedisModule.forRootAsync({
       imports: [ConfigModule],
