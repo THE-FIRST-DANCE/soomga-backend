@@ -7,9 +7,11 @@ import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisConfig } from 'src/configs/config.interface';
 import { LoggerModule } from '../logger/logger.module';
+import { MembersModule } from '../members/members.module';
 
 @Module({
   imports: [
+    MembersModule,
     LoggerModule,
     ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
     RedisModule.forRootAsync({
