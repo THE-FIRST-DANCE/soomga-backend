@@ -6,13 +6,17 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { MembersService } from './members.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthAdminGuard } from '../auth/auth.guard';
 
 @ApiTags('멤버 API')
+@UseGuards(AuthAdminGuard)
+@ApiBearerAuth()
 @Controller('members')
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}

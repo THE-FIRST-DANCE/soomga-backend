@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MembersService } from './members.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Member, MemberStatus, Role } from '@prisma/client';
+import { SignUpDto } from '../auth/dto/sign-up.dto';
 
 describe('MembersService', () => {
   let service: MembersService;
@@ -55,7 +56,15 @@ describe('MembersService', () => {
   });
 
   it('should create a member', async () => {
-    expect(await service.create(member)).toEqual(member);
+    const dto: SignUpDto = {
+      email: 'test@test.com',
+      nickname: 'test',
+      password: 'password',
+      passwordConfirm: 'password',
+      birthdate: new Date(),
+    };
+
+    expect(await service.create(dto)).toEqual(member);
   });
 
   it('should update a member', async () => {
