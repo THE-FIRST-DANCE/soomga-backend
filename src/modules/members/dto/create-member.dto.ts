@@ -9,7 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Match } from '../match.decorator';
+import { Match } from '../../../decorators/match.decorator';
 
 export class CreateMemberDto implements Prisma.MemberCreateInput {
   @ApiProperty()
@@ -30,11 +30,6 @@ export class CreateMemberDto implements Prisma.MemberCreateInput {
     message: '비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.',
   })
   password: string;
-
-  @ApiProperty()
-  @IsString()
-  @Match('password')
-  passwordConfirm: string;
 
   @ApiProperty()
   @IsOptional()
