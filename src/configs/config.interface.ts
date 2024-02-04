@@ -29,6 +29,7 @@ export interface SwaggerConfig {
 }
 
 export interface SecurityConfig {
-  expiresIn: number;
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
   bcryptSaltOrRound: string | number;
 }
