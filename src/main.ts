@@ -3,11 +3,13 @@ import { AppModule } from './modules/app/app.module';
 import { swaggerSetup } from './swagger';
 import { ConfigService } from '@nestjs/config';
 import { NestConfig } from './configs/config.interface';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'debug', 'log'],
   });
+  app.use(cookieParser());
 
   const configService = app.get<ConfigService>(ConfigService);
   const nestConfig = configService.get<NestConfig>('nest');
