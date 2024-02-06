@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JWT_SECRET } from 'src/shared/constants/global.constants';
 import { Request } from 'express';
 import { AuthPayload } from 'src/interfaces/auth.interface';
 import { MembersService } from '../members/members.service';
 import ErrorMessage from 'src/shared/constants/error-messages.constants';
+import { ConfigService } from '@nestjs/config';
 
 const cookieExtractor = (req: Request) => {
   return req.cookies.accessToken;
@@ -13,7 +13,10 @@ const cookieExtractor = (req: Request) => {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private membersService: MembersService) {
+  constructor(
+    private readonly membersService: MembersService,
+    private readonly configService: ConfigService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -21,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         cookieExtractor,
       ]),
       ignoreExpiration: process.env.NODE_ENV === 'dev',
-      secretOrKey: JWT_SECRET,
+      secretOrKey: configService.get<string>('JWT_SECRET'),
     });
   }
 
