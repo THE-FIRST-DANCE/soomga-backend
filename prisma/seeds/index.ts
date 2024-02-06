@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { memberSeed } from './member.seed';
 
 const prisma = new PrismaClient();
+
 async function main() {
   memberSeed(prisma);
 }
