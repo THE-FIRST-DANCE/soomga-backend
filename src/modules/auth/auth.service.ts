@@ -1,11 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthPayload, AuthResponse } from '../../interfaces/auth.interface';
+import {
+  AuthPayload,
+  AuthResponse,
+  OAuthProfile,
+} from '../../interfaces/auth.interface';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { AuthHelpers } from '../../shared/helpers/auth.helpers';
-import { MembersService } from '../members/members.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { CreateMemberDto } from '../members/dto/create-member.dto';
+import { MembersService } from '../members/members.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +18,31 @@ export class AuthService {
     private readonly membersService: MembersService,
     private readonly jwtService: JwtService,
   ) {}
+
+  async handleOAuthLogin(profile: OAuthProfile): Promise<AuthResponse> {
+    let member = await this.membersService.findMemberByEmail(profile.email);
+    if (!member) {
+      const newUser: CreateMemberDto = {
+        email: profile.email,
+        nickname: profile.nickname,
+        birthdate: new Date(),
+        avatar: profile.avatar,
+        provider: profile.provider,
+        password: await AuthHelpers.generateRandomPassword(),
+      };
+      member = await this.membersService.create(newUser);
+    }
+
+    const payload: AuthPayload = {
+      sub: member.id,
+      email: member.email,
+      nickname: member.nickname,
+      role: member.role,
+    };
+
+    // JWT 생성 및 반환 로직
+    return this.generateToken(payload);
+  }
 
   async signIn(signInDto: SignInDto): Promise<AuthResponse> {
     const member = await this.membersService.findMemberByEmail(signInDto.email);
@@ -43,8 +73,6 @@ export class AuthService {
     await this.membersService.checkValidNickname(signUpDto.nickname);
 
     const { passwordConfirm, ...createData } = signUpDto;
-    createData.password = await AuthHelpers.hash(signUpDto.password);
-
     const member = await this.membersService.create(createData);
 
     const payload: AuthPayload = {

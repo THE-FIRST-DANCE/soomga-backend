@@ -11,9 +11,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { AuthResponse } from '../../interfaces/auth.interface';
+import { AuthResponse, OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthAdminGuard,
+  AuthGoogleGuard,
   AuthGuideGuard,
   AuthJwtGuard,
   AuthUserGuard,
@@ -146,5 +147,30 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response> {
     return res.json({ message: '가이드 인증 테스트 API입니다.' });
+  }
+
+  // google oauth 로그인
+  @Get('google')
+  @UseGuards(AuthGoogleGuard)
+  async googleLogin(@Req() req: Request) {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGoogleGuard)
+  async googleAuthRedirect(
+    @Req() req: { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.authService.handleOAuthLogin(req.user);
+    const securityConfig = this.configService.get<SecurityConfig>('security');
+
+    res.cookie('accessToken', accessToken, {
+      maxAge: securityConfig.accessTokenExpiresIn,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: securityConfig.refreshTokenExpiresIn,
+    });
+
+    return res.json({ message: 'Google 로그인 되었습니다.' });
   }
 }
