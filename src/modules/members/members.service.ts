@@ -1,55 +1,50 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
+import { MembersRepository } from './members.repository';
+import { UpdateMemberDto } from './dto/update-member.dto';
+import { AuthHelpers } from '../../shared/helpers/auth.helpers';
 
 @Injectable()
 export class MembersService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly membersRepository: MembersRepository) {}
 
   async findAll() {
-    return this.prismaService.member.findMany({});
+    return this.membersRepository.findAll();
   }
 
   async findOne(id: number) {
-    return this.prismaService.member.findUnique({
-      where: { id },
-    });
+    return this.membersRepository.findOne(id);
   }
 
   async create(createMemberDto: CreateMemberDto) {
-    return this.prismaService.member.create({
-      data: createMemberDto,
-    });
+    const hashedPassword = await AuthHelpers.hash(createMemberDto.password);
+    const newMember: CreateMemberDto = {
+      ...createMemberDto,
+      password: hashedPassword,
+    };
+
+    return this.membersRepository.create(newMember);
   }
 
-  async update(id: number, data: any) {
-    return this.prismaService.member.update({
-      where: { id },
-      data,
-    });
+  async update(id: number, updateMemberDto: UpdateMemberDto) {
+    return this.membersRepository.update(id, updateMemberDto);
   }
 
   async remove(id: number) {
-    return this.prismaService.member.delete({
-      where: { id },
-    });
+    return this.membersRepository.remove(id);
   }
 
   async findMemberByEmail(email: string) {
-    return this.prismaService.member.findUnique({
-      where: { email },
-    });
+    return this.membersRepository.findByEmail(email);
   }
 
   async findMemberByNickname(nickname: string) {
-    return this.prismaService.member.findUnique({
-      where: { nickname },
-    });
+    return this.membersRepository.findByNickname(nickname);
   }
 
   async checkValidEmail(email: string) {
-    const member = await this.findMemberByEmail(email);
+    const member = await this.membersRepository.findByEmail(email);
     if (member) {
       throw new ConflictException(ErrorMessage.EMAIL_EXISTS);
     }
@@ -57,7 +52,7 @@ export class MembersService {
   }
 
   async checkValidNickname(nickname: string) {
-    const member = await this.findMemberByNickname(nickname);
+    const member = await this.membersRepository.findByNickname(nickname);
     if (member) {
       throw new ConflictException(ErrorMessage.NICKNAME_EXISTS);
     }
