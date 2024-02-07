@@ -39,10 +39,6 @@ export class MembersService {
     return this.membersRepository.findByEmail(email);
   }
 
-  async findMemberByNickname(nickname: string) {
-    return this.membersRepository.findByNickname(nickname);
-  }
-
   async checkValidEmail(email: string) {
     const member = await this.membersRepository.findByEmail(email);
     if (member) {
