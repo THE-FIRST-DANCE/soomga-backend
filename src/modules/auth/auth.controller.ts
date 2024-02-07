@@ -17,6 +17,7 @@ import {
   AuthGoogleGuard,
   AuthGuideGuard,
   AuthJwtGuard,
+  AuthLineGuard,
   AuthUserGuard,
 } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -44,17 +45,17 @@ export class AuthController {
     @Body() body: SignInDto,
     @Res() res: Response,
   ): Promise<Response> {
-    const { accessToken, refreshToken } = await this.authService.signIn(body);
-    const securityConfig = this.configService.get<SecurityConfig>('security');
+    const { accessToken, refreshToken, user } =
+      await this.authService.signIn(body);
 
-    res.cookie('accessToken', accessToken, {
-      maxAge: securityConfig.accessTokenExpiresIn,
-    });
-    res.cookie('refreshToken', refreshToken, {
-      maxAge: securityConfig.refreshTokenExpiresIn,
-    });
+    this.setCookies(res, accessToken, refreshToken);
 
-    return res.json({ message: '로그인 되었습니다.' });
+    return res.json({
+      message: '로그인 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
   }
 
   // 로그아웃
@@ -78,21 +79,18 @@ export class AuthController {
     summary: '회원가입',
     description: '새 사용자 등록을 처리합니다.',
   })
-  async signUp(
-    @Body() body: SignUpDto,
-    @Res() res: Response,
-  ): Promise<AuthResponse> {
-    const { accessToken, refreshToken } = await this.authService.signUp(body);
-    const securityConfig = this.configService.get<SecurityConfig>('security');
+  async signUp(@Body() body: SignUpDto, @Res() res: Response) {
+    const { accessToken, refreshToken, user } =
+      await this.authService.signUp(body);
 
-    res.cookie('accessToken', accessToken, {
-      maxAge: securityConfig.accessTokenExpiresIn,
-    });
-    res.cookie('refreshToken', refreshToken, {
-      maxAge: securityConfig.refreshTokenExpiresIn,
-    });
+    this.setCookies(res, accessToken, refreshToken);
 
-    return this.authService.signUp(body);
+    return res.json({
+      message: '회원가입 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
   }
 
   // jwt header 테스트
@@ -154,23 +152,55 @@ export class AuthController {
   @UseGuards(AuthGoogleGuard)
   async googleLogin(@Req() req: Request) {}
 
+  @Get('line')
+  @UseGuards(AuthLineGuard)
+  async lineLogin() {}
+
   @Get('google/callback')
   @UseGuards(AuthGoogleGuard)
   async googleAuthRedirect(
     @Req() req: { user: OAuthProfile },
     @Res() res: Response,
   ) {
-    const { accessToken, refreshToken } =
-      await this.authService.handleOAuthLogin(req.user);
-    const securityConfig = this.configService.get<SecurityConfig>('security');
+    const { accessToken, refreshToken, user } =
+      await this.authService.signInWithOAuth(req.user);
 
+    this.setCookies(res, accessToken, refreshToken);
+
+    return res.json({
+      message: 'Google 로그인 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
+  }
+
+  @Get('line/callback')
+  @UseGuards(AuthLineGuard)
+  async lineAuthRedirect(
+    @Req() req: { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken, user } =
+      await this.authService.signInWithOAuth(req.user);
+
+    this.setCookies(res, accessToken, refreshToken);
+
+    return res.json({
+      message: 'Line 로그인 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
+  }
+
+  private setCookies(res: Response, accessToken: string, refreshToken: string) {
+    const securityConfig = this.configService.get<SecurityConfig>('security');
     res.cookie('accessToken', accessToken, {
       maxAge: securityConfig.accessTokenExpiresIn,
     });
     res.cookie('refreshToken', refreshToken, {
       maxAge: securityConfig.refreshTokenExpiresIn,
     });
-
-    return res.json({ message: 'Google 로그인 되었습니다.' });
   }
 }

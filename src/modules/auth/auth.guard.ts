@@ -48,3 +48,6 @@ export class AuthGuideGuard extends AuthGuard('jwt') {
 
 @Injectable()
 export class AuthGoogleGuard extends AuthGuard('google') {}
+
+@Injectable()
+export class AuthLineGuard extends AuthGuard('line') {}

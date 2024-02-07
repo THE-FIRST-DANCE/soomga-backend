@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 
 // 나중에 적용할 예정
 @Injectable()
@@ -42,9 +42,11 @@ export class MembersRepository {
     });
   }
 
-  async findByNickname(nickname: string) {
-    return this.prismaService.member.findUnique({
-      where: { nickname },
+  async findByProvider(provider: $Enums.Provider, providerId: string) {
+    return this.prismaService.member.findMany({
+      where: {
+        AND: [{ provider }, { providerId }],
+      },
     });
   }
 }

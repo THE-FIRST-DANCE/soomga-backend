@@ -4,6 +4,7 @@ import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { MembersRepository } from './members.repository';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { AuthHelpers } from '../../shared/helpers/auth.helpers';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class MembersService {
@@ -47,11 +48,7 @@ export class MembersService {
     return true;
   }
 
-  async checkValidNickname(nickname: string) {
-    const member = await this.membersRepository.findByNickname(nickname);
-    if (member) {
-      throw new ConflictException(ErrorMessage.NICKNAME_EXISTS);
-    }
-    return true;
+  async findByProvider(provider: $Enums.Provider, providerId: string) {
+    return this.membersRepository.findByProvider(provider, providerId);
   }
 }

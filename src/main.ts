@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestConfig } from './configs/config.interface';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -20,6 +21,13 @@ async function bootstrap() {
   });
 
   app.use(cookieParser());
+  app.use(
+    session({
+      secret: 'my-secret',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
 
   app.useGlobalPipes(new ValidationPipe());
 
