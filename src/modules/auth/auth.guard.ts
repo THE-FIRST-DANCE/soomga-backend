@@ -45,3 +45,6 @@ export class AuthGuideGuard extends AuthGuard('jwt') {
     return user;
   }
 }
+
+@Injectable()
+export class AuthGoogleGuard extends AuthGuard('google') {}

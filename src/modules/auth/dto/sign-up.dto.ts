@@ -8,7 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Match } from '../../../decorators/match.decorator';
+import { Match } from '../../../shared/decorators/match.decorator';
 
 export class SignUpDto {
   @ApiProperty()
