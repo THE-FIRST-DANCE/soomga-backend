@@ -1,16 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  AuthPayload,
-  AuthResponse,
-  OAuthProfile,
-} from '../../interfaces/auth.interface';
-import ErrorMessage from '../../shared/constants/error-messages.constants';
-import { AuthHelpers } from '../../shared/helpers/auth.helpers';
+import { MembersService } from '../members/members.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { CreateMemberDto } from '../members/dto/create-member.dto';
-import { MembersService } from '../members/members.service';
+import { OAuthProfile } from '../../interfaces/auth.interface';
+import ErrorMessage from '../../shared/constants/error-messages.constants';
+import { AuthHelpers } from '../../shared/helpers/auth.helpers';
+import { OAuthSignUpDto } from './dto/oauth-sign-up.dto';
+import { Member } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -19,78 +16,51 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async handleOAuthLogin(profile: OAuthProfile): Promise<AuthResponse> {
-    let member = await this.membersService.findMemberByEmail(profile.email);
+  async signIn(signInDto: SignInDto) {
+    const member = await this.membersService.findMemberByEmail(signInDto.email);
+    if (
+      !member ||
+      !(await AuthHelpers.verify(signInDto.password, member.password))
+    ) {
+      throw new UnauthorizedException(ErrorMessage.INVALID_CREDENTIALS);
+    }
+    return this.generateTokens(member);
+  }
+
+  async signUp(signUpDto: SignUpDto) {
+    await this.membersService.checkValidEmail(signUpDto.email);
+    const member = await this.membersService.create(signUpDto);
+    return this.generateTokens(member);
+  }
+
+  async signInWithOAuth(profile: OAuthProfile) {
+    let [member] = await this.membersService.findByProvider(
+      profile.provider,
+      profile.providerId,
+    );
     if (!member) {
-      const newUser: CreateMemberDto = {
-        email: profile.email,
+      const newMember: OAuthSignUpDto = {
         nickname: profile.nickname,
-        birthdate: new Date(),
         avatar: profile.avatar,
         provider: profile.provider,
-        password: await AuthHelpers.generateRandomPassword(),
+        providerId: profile.providerId,
+        password: AuthHelpers.generateRandomPassword(),
       };
-      member = await this.membersService.create(newUser);
+      member = await this.membersService.create(newMember);
     }
+    return this.generateTokens(member);
+  }
 
-    const payload: AuthPayload = {
+  private generateTokens(member: Member) {
+    const payload = {
       sub: member.id,
       email: member.email,
       nickname: member.nickname,
       role: member.role,
+      avatar: member.avatar,
     };
-
-    // JWT 생성 및 반환 로직
-    return this.generateToken(payload);
-  }
-
-  async signIn(signInDto: SignInDto): Promise<AuthResponse> {
-    const member = await this.membersService.findMemberByEmail(signInDto.email);
-    if (!member) {
-      throw new UnauthorizedException(ErrorMessage.INVALID_CREDENTIALS);
-    }
-
-    const isMatch = await AuthHelpers.verify(
-      signInDto.password,
-      member.password,
-    );
-    if (!isMatch) {
-      throw new UnauthorizedException(ErrorMessage.INVALID_CREDENTIALS);
-    }
-
-    const payload: AuthPayload = {
-      sub: member.id,
-      email: member.email,
-      nickname: member.nickname,
-      role: member.role,
-    };
-
-    return this.generateToken(payload);
-  }
-
-  async signUp(signUpDto: SignUpDto): Promise<AuthResponse> {
-    await this.membersService.checkValidEmail(signUpDto.email);
-    await this.membersService.checkValidNickname(signUpDto.nickname);
-
-    const { passwordConfirm, ...createData } = signUpDto;
-    const member = await this.membersService.create(createData);
-
-    const payload: AuthPayload = {
-      sub: member.id,
-      email: member.email,
-      nickname: member.nickname,
-      role: member.role,
-    };
-
-    return this.generateToken(payload);
-  }
-
-  private generateToken(payload: AuthPayload): AuthResponse {
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
-    });
-
-    return { accessToken, refreshToken };
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    return { user: payload, accessToken, refreshToken };
   }
 }

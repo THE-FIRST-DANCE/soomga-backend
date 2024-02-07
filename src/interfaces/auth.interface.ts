@@ -2,14 +2,16 @@ import { $Enums } from '@prisma/client';
 
 export interface AuthPayload {
   sub: number;
-  email: string;
+  email?: string;
   nickname: string;
+  avatar?: string;
   role: string;
 }
 
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
+  user: AuthPayload;
 }
 
 export interface GoogleProfile {
@@ -24,10 +26,17 @@ export interface GoogleProfile {
   accessToken: string;
 }
 
+export interface LineProfile {
+  displayName: string;
+  id: string;
+  pictureUrl: string;
+  provider: $Enums.Provider;
+}
+
 export interface OAuthProfile {
-  email: string;
   nickname: string;
   avatar: string;
   provider: $Enums.Provider;
+  providerId: string;
   accessToken: string;
 }

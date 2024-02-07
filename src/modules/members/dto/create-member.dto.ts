@@ -14,7 +14,8 @@ export class CreateMemberDto implements Prisma.MemberCreateInput {
   @ApiProperty()
   @IsString()
   @IsEmail({}, { message: '이메일 형식이 아닙니다.' })
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @ApiProperty()
   @IsString()
