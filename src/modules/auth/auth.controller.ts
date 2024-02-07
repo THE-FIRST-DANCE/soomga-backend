@@ -21,11 +21,16 @@ import {
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { ConfigService } from '@nestjs/config';
+import { SecurityConfig } from 'src/configs/config.interface';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // 로그인
   @Post('signin')
@@ -39,12 +44,13 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response> {
     const { accessToken, refreshToken } = await this.authService.signIn(body);
+    const securityConfig = this.configService.get<SecurityConfig>('security');
 
     res.cookie('accessToken', accessToken, {
-      maxAge: 5 * 60 * 1000, // 5 minutes
+      maxAge: securityConfig.accessTokenExpiresIn,
     });
     res.cookie('refreshToken', refreshToken, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: securityConfig.refreshTokenExpiresIn,
     });
 
     return res.json({ message: '로그인 되었습니다.' });
@@ -71,7 +77,20 @@ export class AuthController {
     summary: '회원가입',
     description: '새 사용자 등록을 처리합니다.',
   })
-  async signUp(@Body() body: SignUpDto): Promise<AuthResponse> {
+  async signUp(
+    @Body() body: SignUpDto,
+    @Res() res: Response,
+  ): Promise<AuthResponse> {
+    const { accessToken, refreshToken } = await this.authService.signUp(body);
+    const securityConfig = this.configService.get<SecurityConfig>('security');
+
+    res.cookie('accessToken', accessToken, {
+      maxAge: securityConfig.accessTokenExpiresIn,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: securityConfig.refreshTokenExpiresIn,
+    });
+
     return this.authService.signUp(body);
   }
 

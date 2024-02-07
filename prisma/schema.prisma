@@ -8,124 +8,128 @@ datasource db {
 }
 
 model Member {
-  id       Int      @id @default(autoincrement())
-  email     String   @unique 
-  nickname  String   @unique
-  password  String
-  status    MemberStatus? @default(ACTIVE)
-  role      Role?     @default(USER)
-  createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt
-  deletedAt DateTime? 
+  id         Int           @id @default(autoincrement())
+  email      String        @unique
+  nickname   String        @unique
+  password   String
+  avatar     String?
+  birthdate  DateTime?     @default(now())
+  status     MemberStatus? @default(ACTIVE)
+  role       Role?         @default(USER)
+  provider   Provider?     @default(LOCAL)
+  providerId String?
+  createdAt  DateTime?     @default(now())
+  updatedAt  DateTime?     @updatedAt
+  deletedAt  DateTime?
 
-  tags      MemberTag[]
+  tags       MemberTag[]
   languages  MemberLanguage[]
-  boards    Board[]
+  boards     Board[]
   boardLikes BoardLike[]
-  plans     Plan[]
-  schedules MemberSchedule[]
-  chatrooms ChatroomParticipants[]
-  messages  ChatroomMessage[]
+  plans      Plan[]
+  schedules  MemberSchedule[]
+  chatrooms  ChatroomParticipants[]
+  messages   ChatroomMessage[]
 
   guideProfile GuideProfile?
 }
 
 model GuideProfile {
-  id        Int  @id
+  id          Int    @id
   temperatrue Float  @default(36.5)
-  service   String 
+  service     String
 
-  member Member? @relation(fields: [id], references: [id])
+  member                 Member?                      @relation(fields: [id], references: [id])
   languageCertifications GuideLanguageCertification[]
 }
 
 model GuideReview {
-  id        Int      @id @default(autoincrement())
-  communicationScore Int @default(5) 
-  kindnessScore Int @default(5)
-  locationScore Int @default(5)
-  content String?
-  createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt
+  id                 Int       @id @default(autoincrement())
+  communicationScore Int       @default(5)
+  kindnessScore      Int       @default(5)
+  locationScore      Int       @default(5)
+  content            String?
+  createdAt          DateTime? @default(now())
+  updatedAt          DateTime? @updatedAt
 }
 
 model Board {
-  id        Int      @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   title     String
   content   String
   type      BoardType
   status    AcessStatus @default(PUBLIC)
-  createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt DateTime?   @default(now())
+  updatedAt DateTime?   @updatedAt
   deletedAt DateTime?
 
-  tags      BoardTag[]
-  likes     BoardLike[]
+  tags  BoardTag[]
+  likes BoardLike[]
 
-  authorId  Int?
-  author    Member?  @relation(fields: [authorId], references: [id])
+  authorId Int?
+  author   Member? @relation(fields: [authorId], references: [id])
 }
 
 model BoardLike {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   createdAt DateTime? @default(now())
 
-  boardId   Int
-  board     Board    @relation(fields: [boardId], references: [id])
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id])
 
-  memberId  Int
-  member    Member   @relation(fields: [memberId], references: [id])
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
 }
 
 model Tag {
-  id       Int      @id @default(autoincrement())
-  name     String   @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
-  members  MemberTag[]
-  boards   BoardTag[]
+  members MemberTag[]
+  boards  BoardTag[]
 }
 
 model MemberTag {
-  id       Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   memberId Int
-  member   Member   @relation(fields: [memberId], references: [id])
+  member   Member @relation(fields: [memberId], references: [id])
 
-  tagId    Int
-  tag      Tag      @relation(fields: [tagId], references: [id])
+  tagId Int
+  tag   Tag @relation(fields: [tagId], references: [id])
 }
 
 model BoardTag {
-  id       Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  boardId  Int
-  board    Board    @relation(fields: [boardId], references: [id])
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id])
 
-  tagId    Int
-  tag      Tag      @relation(fields: [tagId], references: [id])
+  tagId Int
+  tag   Tag @relation(fields: [tagId], references: [id])
 }
 
 model Language {
-  id       Int      @id @default(autoincrement())
-  name     String   @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   certifications LanguageCertification[]
   members        MemberLanguage[]
 }
 
 model MemberLanguage {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  memberId  Int
-  member    Member   @relation(fields: [memberId], references: [id])
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
 
   languageId Int
   language   Language @relation(fields: [languageId], references: [id])
 }
 
 model LanguageCertification {
-  id        Int      @id @default(autoincrement())
-  name      String
+  id   Int    @id @default(autoincrement())
+  name String
 
   guideLanguageCertifications GuideLanguageCertification[]
 
@@ -134,147 +138,152 @@ model LanguageCertification {
 }
 
 model GuideLanguageCertification {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  guideId   Int
-  guide     GuideProfile @relation(fields: [guideId], references: [id])
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id])
 
   languageCertificationId Int
   languageCertification   LanguageCertification @relation(fields: [languageCertificationId], references: [id])
 }
 
 model Plan {
-  id        Int      @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   title     String
   content   String
   status    AcessStatus @default(PUBLIC)
-  createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt DateTime?   @default(now())
+  updatedAt DateTime?   @updatedAt
   deletedAt DateTime?
 
-  authorId  Int?
-  author    Member?  @relation(fields: [authorId], references: [id])
+  authorId Int?
+  author   Member? @relation(fields: [authorId], references: [id])
 
   schedules PlanSchedule[]
 }
 
 model PlanSchedule {
-  id       Int      @id @default(autoincrement())
+  id       Int @id @default(autoincrement())
   sequence Int
 
-  planId    Int
-  plan      Plan     @relation(fields: [planId], references: [id])
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id])
 
   scheduleId Int
   schedule   Schedule @relation(fields: [scheduleId], references: [id])
 }
 
 model Schedule {
-  id        Int      @id @default(autoincrement())
-  name      String
+  id          Int      @id @default(autoincrement())
+  name        String
   description String
-  startTime DateTime
-  endTime   DateTime
+  startTime   DateTime
+  endTime     DateTime
 
-  placeId   Int?
-  place     Place?    @relation(fields: [placeId], references: [id])
+  placeId Int?
+  place   Place? @relation(fields: [placeId], references: [id])
 
-  plans     PlanSchedule[]
-  members  MemberSchedule[]
+  plans   PlanSchedule[]
+  members MemberSchedule[]
 }
 
 model MemberSchedule {
-  id        Int      @id @default(autoincrement())
-  
-  memberId  Int
-  member    Member   @relation(fields: [memberId], references: [id])
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
 
   scheduleId Int
   schedule   Schedule @relation(fields: [scheduleId], references: [id])
 }
 
 model Place {
-  id        Int      @id @default(autoincrement())
-  name      String
-  address   String?
+  id          Int     @id @default(autoincrement())
+  name        String
+  address     String?
   description String?
-  photo     String?
-  latitude  Float
-  longitude Float
+  photo       String?
+  latitude    Float
+  longitude   Float
 
   schedules Schedule[]
   reviews   PlaceReview[]
 }
 
 model PlaceReview {
-  id        Int      @id @default(autoincrement())
-  score    Int
-  content String?
+  id        Int       @id @default(autoincrement())
+  score     Int
+  content   String?
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
 
-  placeId   Int
-  place     Place    @relation(fields: [placeId], references: [id])
+  placeId Int
+  place   Place @relation(fields: [placeId], references: [id])
 }
 
 model Chatroom {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   createdAt DateTime? @default(now())
   deletedAt DateTime?
 
-  members   ChatroomParticipants[]
-  messages  ChatroomMessage[]
+  members  ChatroomParticipants[]
+  messages ChatroomMessage[]
 }
 
 model ChatroomParticipants {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   chatroomId Int
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
-  memberId   Int
-  member     Member   @relation(fields: [memberId], references: [id])
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
 }
 
 model ChatroomMessage {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   Json
   createdAt DateTime? @default(now())
 
   chatroomId Int
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
-  memberId   Int
-  sender    Member   @relation(fields: [memberId], references: [id])
+  memberId Int
+  sender   Member @relation(fields: [memberId], references: [id])
 }
 
+enum Provider {
+  LOCAL
+  GOOGLE
+  LINE
+}
 
 enum Role {
   USER
-  GUIDE 
-  ADMIN 
+  GUIDE
+  ADMIN
 }
 
 enum Gender {
-  MALE 
-  FEMALE 
+  MALE
+  FEMALE
 }
 
 enum MemberStatus {
-  ACTIVE 
-  INACTIVE 
+  ACTIVE
+  INACTIVE
   DELETED
 }
 
 enum AcessStatus {
-  PUBLIC 
-  PRIVATE 
+  PUBLIC
+  PRIVATE
   DELETED
 }
 
 enum BoardType {
-  TRIP 
-  SOS 
-  NOTICE 
+  TRIP
+  SOS
+  NOTICE
 }
