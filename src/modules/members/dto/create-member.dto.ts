@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import {
   IsDateString,
   IsEmail,
@@ -9,13 +9,13 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Match } from '../../../decorators/match.decorator';
 
 export class CreateMemberDto implements Prisma.MemberCreateInput {
   @ApiProperty()
   @IsString()
   @IsEmail({}, { message: '이메일 형식이 아닙니다.' })
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @ApiProperty()
   @IsString()
@@ -35,4 +35,8 @@ export class CreateMemberDto implements Prisma.MemberCreateInput {
   @IsOptional()
   @IsDateString()
   birthdate?: string | Date;
+
+  avatar?: string;
+  provider?: $Enums.Provider;
+  role?: $Enums.Role;
 }

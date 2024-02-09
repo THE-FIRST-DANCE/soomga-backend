@@ -11,21 +11,28 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { AuthResponse } from '../../interfaces/auth.interface';
+import { AuthResponse, OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthAdminGuard,
+  AuthGoogleGuard,
   AuthGuideGuard,
   AuthJwtGuard,
+  AuthLineGuard,
   AuthUserGuard,
 } from './auth.guard';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { ConfigService } from '@nestjs/config';
+import { SecurityConfig } from 'src/configs/config.interface';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // 로그인
   @Post('signin')
@@ -38,16 +45,17 @@ export class AuthController {
     @Body() body: SignInDto,
     @Res() res: Response,
   ): Promise<Response> {
-    const { accessToken, refreshToken } = await this.authService.signIn(body);
+    const { accessToken, refreshToken, user } =
+      await this.authService.signIn(body);
 
-    res.cookie('accessToken', accessToken, {
-      maxAge: 5 * 60 * 1000, // 5 minutes
-    });
-    res.cookie('refreshToken', refreshToken, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    this.setCookies(res, accessToken, refreshToken);
 
-    return res.json({ message: '로그인 되었습니다.' });
+    return res.json({
+      message: '로그인 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
   }
 
   // 로그아웃
@@ -71,8 +79,18 @@ export class AuthController {
     summary: '회원가입',
     description: '새 사용자 등록을 처리합니다.',
   })
-  async signUp(@Body() body: SignUpDto): Promise<AuthResponse> {
-    return this.authService.signUp(body);
+  async signUp(@Body() body: SignUpDto, @Res() res: Response) {
+    const { accessToken, refreshToken, user } =
+      await this.authService.signUp(body);
+
+    this.setCookies(res, accessToken, refreshToken);
+
+    return res.json({
+      message: '회원가입 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
   }
 
   // jwt header 테스트
@@ -127,5 +145,62 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response> {
     return res.json({ message: '가이드 인증 테스트 API입니다.' });
+  }
+
+  // google oauth 로그인
+  @Get('google')
+  @UseGuards(AuthGoogleGuard)
+  async googleLogin(@Req() req: Request) {}
+
+  @Get('line')
+  @UseGuards(AuthLineGuard)
+  async lineLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGoogleGuard)
+  async googleAuthRedirect(
+    @Req() req: { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken, user } =
+      await this.authService.signInWithOAuth(req.user);
+
+    this.setCookies(res, accessToken, refreshToken);
+
+    return res.json({
+      message: 'Google 로그인 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
+  }
+
+  @Get('line/callback')
+  @UseGuards(AuthLineGuard)
+  async lineAuthRedirect(
+    @Req() req: { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken, user } =
+      await this.authService.signInWithOAuth(req.user);
+
+    this.setCookies(res, accessToken, refreshToken);
+
+    return res.json({
+      message: 'Line 로그인 되었습니다.',
+      accessToken,
+      refreshToken,
+      user,
+    });
+  }
+
+  private setCookies(res: Response, accessToken: string, refreshToken: string) {
+    const securityConfig = this.configService.get<SecurityConfig>('security');
+    res.cookie('accessToken', accessToken, {
+      maxAge: securityConfig.accessTokenExpiresIn,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: securityConfig.refreshTokenExpiresIn,
+    });
   }
 }

@@ -21,7 +21,13 @@ const verify = (password: string, hash: string): Promise<boolean> => {
   });
 };
 
+const generateRandomPassword = (): string => {
+  const randomPassword = randomBytes(8).toString('hex');
+  return randomPassword;
+};
+
 export const AuthHelpers = {
   hash,
   verify,
+  generateRandomPassword,
 };

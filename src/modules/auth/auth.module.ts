@@ -5,18 +5,30 @@ import { MembersService } from '../members/members.service';
 import { MembersModule } from '../members/members.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
-import { JWT_SECRET } from 'src/shared/constants/global.constants';
 import { JwtStrategy } from './auth.jwt.strategy';
+import { GoogleStrategy } from './auth.google.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LineStrategy } from './auth.line.strategy';
 
 @Module({
   imports: [
     MembersModule,
     PrismaModule,
-    JwtModule.register({
-      secret: JWT_SECRET,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
     }),
   ],
-  providers: [AuthService, MembersService, JwtStrategy],
+  providers: [
+    AuthService,
+    MembersService,
+    JwtStrategy,
+    GoogleStrategy,
+    LineStrategy,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

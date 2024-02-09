@@ -21,8 +21,8 @@ export const GLOBAL_CONFIG: Config = {
     port: +process.env.REDIS_PORT || 6379,
   },
   security: {
-    accessTokenExpiresIn: 3600 * 0.5, // 0.5 hour
-    refreshTokenExpiresIn: 3600 * 24 * 30, // 30 days
+    accessTokenExpiresIn: 1000 * 60 * 60 * 0.5, // 0.5 hour
+    refreshTokenExpiresIn: 1000 * 60 * 60 * 24 * 14, // 14 days
     bcryptSaltOrRound: 10,
   },
 };
