@@ -9,7 +9,7 @@ import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'debug', 'log'],
+    // logger: ['error', 'warn', 'debug', 'log'],
   });
 
   // FIXME: CORS 설정은 나중에 변경할 예정

@@ -7,9 +7,11 @@ import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
 import { AuthModule } from '../auth/auth.module';
+import { PlacesModule } from '../places/places.module';
 
 @Module({
   imports: [
+    PlacesModule,
     AuthModule,
     MembersModule,
     LoggerModule,
