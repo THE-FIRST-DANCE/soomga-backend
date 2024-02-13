@@ -23,3 +23,25 @@ export interface GooglePlacePhoto {
   photo_reference: string;
   width: number;
 }
+
+export interface GooglePlaceDetail {
+  result: {
+    formatted_address: string;
+    formatted_phone_number: string;
+    opening_hours: {
+      periods: GooglePlaceDetailPeriods[];
+    };
+    url: string;
+  };
+}
+
+export interface GooglePlaceDetailPeriods {
+  close: {
+    day: number;
+    time: string;
+  };
+  open: {
+    day: number;
+    time: string;
+  };
+}
