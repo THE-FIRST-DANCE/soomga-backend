@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { GooglePlaceResponse } from 'src/interfaces/google.interface';
+import {
+  GooglePlaceDetail,
+  GooglePlaceResponse,
+} from 'src/interfaces/google.interface';
 
 @Injectable()
 export class GoogleHttpService {
@@ -17,11 +20,26 @@ export class GoogleHttpService {
           keyword: query,
           location,
           radius: 50000,
-          lnaguage: 'ko',
           pagetoken,
+          language: 'ko',
         },
       },
     );
+    return response.data;
+  }
+
+  async getPlaceDetail(placeId: string): Promise<GooglePlaceDetail> {
+    const response = await axios.get(
+      'https://maps.googleapis.com/maps/api/place/details/json',
+      {
+        params: {
+          key: process.env.GOOGLE_CLIENT_SEARCH_ID,
+          place_id: placeId,
+          language: 'ko',
+        },
+      },
+    );
+
     return response.data;
   }
 }

@@ -198,19 +198,33 @@ model MemberSchedule {
 }
 
 model Place {
-  id        Int      @id @default(autoincrement())
-  placeId   String   @unique
-  name      String
-  address   String?
+  id          Int      @id @default(autoincrement())
+  placeId     String   @unique
+  name        String
+  address     String?
   description String?
-  photo     String?
-  latitude  Float
-  longitude Float
-  rating    Float
-  category  String
-  region    String
-
+  photo       String?
+  latitude    Float
+  longitude   Float
+  rating      Float
+  category    String
+  region      String
+  url         String
+  detailAddress String?
+  phone        String?
+  
+  openingHours OpeningHours[]
   schedules Schedule[]
+}
+
+model OpeningHours {
+  id          Int       @id @default(autoincrement())
+  dayOfWeek   Int   
+  openTime    String    
+  closeTime   String   
+
+  placeId     Int       
+  place       Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
 model PlaceReview {
