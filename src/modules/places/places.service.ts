@@ -17,7 +17,6 @@ export class PlacesService {
   }
 
   async getPlaces(category: string, region: string) {
-    console.log(category, region);
     return this.placesRepository.getPlaces(category, region);
   }
 
