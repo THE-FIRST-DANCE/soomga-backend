@@ -30,5 +30,6 @@ import { LineStrategy } from './auth.line.strategy';
     LineStrategy,
   ],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class AuthModule {}

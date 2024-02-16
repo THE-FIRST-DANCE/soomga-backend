@@ -18,8 +18,8 @@ import { Response } from 'express';
 import { UpdateAreasDto } from './dto/update-areas.dto';
 import { UpdateLanguageCertificationsDto } from './dto/update-language-certifications.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
-import { SendAuthCodeDto } from './dto/send-authcode.dto';
-import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
+// import { SendAuthCodeDto } from './dto/send-authcode.dto';
+// import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 
 @ApiTags('가이드 API')
 @Controller('guides')
@@ -119,40 +119,40 @@ export class GuidesController {
     return res.json({ message: '가이드 탈퇴가 완료되었습니다.' });
   }
 
-  @Post('auth-code')
-  @UseGuards(AuthGuideGuard)
-  @ApiOperation({
-    summary: '인증코드 발송',
-    description: '가이드에게 인증코드를 발송합니다.',
-  })
-  async sendAuthCode(
-    @Req() req: { user: Member },
-    @Body() { phoneNumber }: SendAuthCodeDto,
-    @Res() res: Response,
-  ) {
-    const { id } = req.user;
+  // @Post('auth-code')
+  // @UseGuards(AuthGuideGuard)
+  // @ApiOperation({
+  //   summary: '인증코드 발송',
+  //   description: '가이드에게 인증코드를 발송합니다.',
+  // })
+  // async sendAuthCode(
+  //   @Req() req: { user: Member },
+  //   @Body() { phoneNumber }: SendAuthCodeDto,
+  //   @Res() res: Response,
+  // ) {
+  //   const { id } = req.user;
 
-    await this.guidesService.sendAuthCode(id, phoneNumber);
+  //   await this.guidesService.sendAuthCode(id, phoneNumber);
 
-    return res.json({ message: '인증코드가 발송되었습니다.' });
-  }
+  //   return res.json({ message: '인증코드가 발송되었습니다.' });
+  // }
 
   // 휴대폰 번호 등록
-  @Post('register/phone-number')
-  @UseGuards(AuthGuideGuard)
-  @ApiOperation({
-    summary: '휴대폰 번호 등록',
-    description: '가이드의 휴대폰 번호를 등록합니다.',
-  })
-  async registerPhoneNumber(
-    @Req() req: { user: Member },
-    @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
-    @Res() res: Response,
-  ) {
-    const { id } = req.user;
-    const { phoneNumber, authCode } = registerPhoneNumberDto;
-    await this.guidesService.registerPhoneNumber(id, phoneNumber, authCode);
+  // @Post('register/phone-number')
+  // @UseGuards(AuthGuideGuard)
+  // @ApiOperation({
+  //   summary: '휴대폰 번호 등록',
+  //   description: '가이드의 휴대폰 번호를 등록합니다.',
+  // })
+  // async registerPhoneNumber(
+  //   @Req() req: { user: Member },
+  //   @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
+  //   @Res() res: Response,
+  // ) {
+  //   const { id } = req.user;
+  //   const { phoneNumber, authCode } = registerPhoneNumberDto;
+  //   await this.guidesService.registerPhoneNumber(id, phoneNumber, authCode);
 
-    return res.json({ message: '휴대폰 번호가 등록되었습니다.' });
-  }
+  //   return res.json({ message: '휴대폰 번호가 등록되었습니다.' });
+  // }
 }
