@@ -36,4 +36,23 @@ export class GuidesService {
   async leaveGuide(id: number) {
     return this.guidesRepository.leaveGuide(id);
   }
+
+  async sendAuthCode(id: number, phoneNumber: string) {
+    return this.authService.sendAuthCode(id, phoneNumber);
+  }
+
+  async registerPhoneNumber(id: number, phoneNumber: string, authCode: string) {
+    await this.checkPhoneNumberValid(phoneNumber);
+
+    await this.authService.validateAuthCode(id, authCode, phoneNumber);
+
+    return this.guidesRepository.registerPhoneNumber(id, phoneNumber);
+  }
+
+  private async checkPhoneNumberValid(phoneNumber: string) {
+    const isExist = await this.guidesRepository.findByPhoneNumber(phoneNumber);
+    if (isExist) {
+      throw new BadRequestException(ErrorMessage.PHONE_NUMBER_ALREADY_EXISTS);
+    }
+  }
 }

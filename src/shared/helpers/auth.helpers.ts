@@ -26,8 +26,15 @@ const generateRandomPassword = (): string => {
   return randomPassword;
 };
 
+// 6자리 인증코드 생성 (숫자 + 대문자)
+const generateAuthCode = (): string => {
+  const authCode = randomBytes(3).toString('hex').toUpperCase();
+  return authCode;
+};
+
 export const AuthHelpers = {
   hash,
   verify,
   generateRandomPassword,
+  generateAuthCode,
 };
