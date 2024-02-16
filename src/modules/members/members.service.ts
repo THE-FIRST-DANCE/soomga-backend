@@ -51,4 +51,8 @@ export class MembersService {
   async findByProvider(provider: $Enums.Provider, providerId: string) {
     return this.membersRepository.findByProvider(provider, providerId);
   }
+
+  async updateLanguages(id: number, languageIds: number[]) {
+    return this.membersRepository.updateLanguages(id, languageIds);
+  }
 }

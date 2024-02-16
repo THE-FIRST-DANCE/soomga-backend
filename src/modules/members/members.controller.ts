@@ -13,6 +13,7 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthAdminGuard } from '../auth/auth.guard';
+import { UpdateLanguageDto } from './dto/update-language.dto';
 
 @ApiTags('멤버 API')
 @UseGuards(AuthAdminGuard)
@@ -64,5 +65,17 @@ export class MembersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.membersService.remove(+id);
+  }
+
+  @ApiOperation({
+    summary: '멤버 언어 업데이트',
+    description: '특정 아이디를 가진 멤버의 언어 정보를 업데이트합니다.',
+  })
+  @Patch(':id/languages')
+  updateLanguages(
+    @Param('id') id: string,
+    @Body() { languageIds }: UpdateLanguageDto,
+  ) {
+    return this.membersService.updateLanguages(+id, languageIds);
   }
 }
