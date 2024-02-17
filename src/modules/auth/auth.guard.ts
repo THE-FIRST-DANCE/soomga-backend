@@ -1,7 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '@prisma/client';
-import { IncorrectRoleException } from 'src/exceptions/member.exception';
 import ErrorMessage from 'src/shared/constants/error-messages.constants';
 
 @Injectable()
@@ -14,7 +17,7 @@ export class AuthAdminGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
     if (user.role !== Role.ADMIN) {
-      throw new IncorrectRoleException(ErrorMessage.INCORRECT_ROLE);
+      throw new ForbiddenException(ErrorMessage.INCORRECT_ROLE);
     }
     return user;
   }
@@ -27,7 +30,7 @@ export class AuthUserGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
     if (user.role !== Role.USER && user.role !== Role.ADMIN) {
-      throw new IncorrectRoleException(ErrorMessage.INCORRECT_ROLE);
+      throw new ForbiddenException(ErrorMessage.INCORRECT_ROLE);
     }
     return user;
   }
@@ -40,7 +43,7 @@ export class AuthGuideGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException();
     }
     if (user.role !== Role.GUIDE && user.role !== Role.ADMIN) {
-      throw new IncorrectRoleException(ErrorMessage.INCORRECT_ROLE);
+      throw new ForbiddenException(ErrorMessage.INCORRECT_ROLE);
     }
     return user;
   }

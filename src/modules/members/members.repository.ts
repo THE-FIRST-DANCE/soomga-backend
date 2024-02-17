@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { $Enums, Prisma } from '@prisma/client';
 
-// 나중에 적용할 예정
 @Injectable()
 export class MembersRepository {
   constructor(private readonly prismaService: PrismaService) {}
@@ -46,6 +45,44 @@ export class MembersRepository {
     return this.prismaService.member.findMany({
       where: {
         AND: [{ provider }, { providerId }],
+      },
+    });
+  }
+
+  async updateLanguages(id: number, languageIds: number[]) {
+    const currentLanguageIds = await this.prismaService.memberLanguage
+      .findMany({
+        where: { memberId: id },
+        select: {
+          languageId: true,
+        },
+      })
+      .then((result) => result.map(({ languageId }) => languageId));
+    const languageIdsToCreate = languageIds.filter(
+      (id) => !currentLanguageIds.includes(id),
+    );
+    const languageIdsToDelete = currentLanguageIds.filter(
+      (id) => !languageIds.includes(id),
+    );
+
+    if (languageIdsToCreate.length === 0 && languageIdsToDelete.length === 0) {
+      return;
+    }
+
+    return await this.prismaService.member.update({
+      where: { id },
+      data: {
+        languages: {
+          deleteMany: {
+            languageId: { in: languageIdsToDelete },
+          },
+          createMany: {
+            data: languageIdsToCreate.map((languageId) => ({
+              languageId,
+            })),
+            skipDuplicates: true,
+          },
+        },
       },
     });
   }

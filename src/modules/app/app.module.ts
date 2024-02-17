@@ -8,13 +8,17 @@ import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
 import { AuthModule } from '../auth/auth.module';
 import { PlacesModule } from '../places/places.module';
+import { GuidesModule } from '../guides/guides.module';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
   imports: [
     PlacesModule,
     AuthModule,
+    GuidesModule,
     MembersModule,
     LoggerModule,
+    RedisModule,
     ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
   ],
   controllers: [AppController],
