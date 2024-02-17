@@ -9,11 +9,16 @@ import { JwtStrategy } from './auth.jwt.strategy';
 import { GoogleStrategy } from './auth.google.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LineStrategy } from './auth.line.strategy';
+import { RedisModule } from '../redis/redis.module';
+import { CoolsmsModule } from '../coolsms/coolsms.module';
+import { AuthRepository } from './auth.repository';
 
 @Module({
   imports: [
     MembersModule,
     PrismaModule,
+    RedisModule,
+    CoolsmsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -28,6 +33,7 @@ import { LineStrategy } from './auth.line.strategy';
     JwtStrategy,
     GoogleStrategy,
     LineStrategy,
+    AuthRepository,
   ],
   controllers: [AuthController],
   exports: [AuthService],

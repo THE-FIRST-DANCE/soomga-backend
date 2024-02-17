@@ -9,6 +9,7 @@ import { MembersModule } from '../members/members.module';
 import { AuthModule } from '../auth/auth.module';
 import { PlacesModule } from '../places/places.module';
 import { GuidesModule } from '../guides/guides.module';
+import { CoolsmsModule } from '../coolsms/coolsms.module';
 import { RedisModule } from '../redis/redis.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { RedisModule } from '../redis/redis.module';
     GuidesModule,
     MembersModule,
     LoggerModule,
+    CoolsmsModule,
     RedisModule,
     ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
   ],
