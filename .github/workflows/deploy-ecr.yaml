@@ -1,9 +1,10 @@
-name: Build and Deploy to AWS ECR
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main 
+      - develop
+      - main
 
 jobs:
   build-and-push:
@@ -19,19 +20,14 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Login to Amazon ECR
-      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build, tag, and push image to Amazon ECR
+    - name: Build and push image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-    - name: Output image name
-      run: 'echo "Image name: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"'
-
-
+        TAG=${{ github.ref == 'refs/heads/main' && 'latest' || $IMAGE_TAG }}
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$TAG
