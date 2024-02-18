@@ -39,7 +39,7 @@ jobs:
       id: setting-task-definition
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: task-definition.json
+        task-definition: ops/task-definition.json
         container-name: soomga-container
         image: ${{ env.image }}
 
