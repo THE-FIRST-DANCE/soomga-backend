@@ -23,19 +23,24 @@ jobs:
       id : login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Set global env vars
+      run: |
+        echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
+        echo "ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_ENV
+        echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+    - name: Set image env var
+      run: echo "IMAGE=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
     - name: Build and push
       uses: docker/build-push-action@v2 # 
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        IMAGE_TAG: ${{ github.sha }}
       with:
         context: .
         push: true
-        tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        tags: ${{ env.IMAGE }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -45,7 +50,7 @@ jobs:
       with:
         task-definition: ops/task-definition.json
         container-name: soomga-nest-container
-        image: ${{ env.image }}
+        image: ${{ env.IMAGE }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
