@@ -7,21 +7,25 @@ export const redisProvider: Provider[] = [
     useFactory: async () => {
       console.log('REDIS_HOST', process.env.REDIS_HOST);
       console.log('REDIS_PORT', process.env.REDIS_PORT);
-      const client = createClient({
-        url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-      });
+      try {
+        const client = createClient({
+          url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+        });
 
-      client.on('error', (error) => {
-        console.error('Redis error', error);
-      });
+        client.on('error', (error) => {
+          console.error('Redis error', error);
+        });
 
-      await client
-        .connect()
-        .then(() => {
-          console.log('Redis connected');
-        })
-        .catch((error) => console.error('Redis connection error', error));
-      return client;
+        await client
+          .connect()
+          .then(() => {
+            console.log('Redis connected');
+          })
+          .catch((error) => console.error('Redis connection error', error));
+        return client;
+      } catch (error) {
+        console.error('Redis connection error', error);
+      }
     },
   },
 ];
