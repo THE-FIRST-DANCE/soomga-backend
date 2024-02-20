@@ -1,4 +1,7 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { redisStore } from 'cache-manager-redis-yet';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -10,7 +13,7 @@ import { AuthModule } from '../auth/auth.module';
 import { PlacesModule } from '../places/places.module';
 import { GuidesModule } from '../guides/guides.module';
 import { CoolsmsModule } from '../coolsms/coolsms.module';
-import { RedisModule } from '../redis/redis.module';
+import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -20,7 +23,30 @@ import { RedisModule } from '../redis/redis.module';
     MembersModule,
     LoggerModule,
     CoolsmsModule,
-    RedisModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<CacheModuleOptions> => {
+        try {
+          const redis = await redisStore({
+            ttl: 30_000,
+            socket: {
+              host: configService.get('REDIS_HOST'),
+              port: configService.get('REDIS_PORT'),
+            },
+          });
+          return { store: redis };
+        } catch (error) {
+          console.error(
+            'Failed to connect to Redis, using in-memory cache instead.',
+            error,
+          );
+          return { store: 'memory', ttl: 30_000 };
+        }
+      },
+      inject: [ConfigService],
+    }),
     ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
   ],
   controllers: [AppController],
