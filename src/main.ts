@@ -34,8 +34,6 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
   const nestConfig = configService.get<NestConfig>('nest');
 
-  console.log(process.env); // FIXME:
-
   swaggerSetup(app);
 
   await app.listen(nestConfig.port);

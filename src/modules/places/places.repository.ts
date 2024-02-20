@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleHttpService } from '../common/http/google-http.service';
-import { GooglePlaceResponse } from 'src/interfaces/google.interface';
+import { GooglePlaceResponse } from '../../interfaces/google.interface';
 import { PlaceAddDto } from './dto/place.dto';
 import { Place } from '@prisma/client';
 

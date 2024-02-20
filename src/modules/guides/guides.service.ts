@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { GuidesRepository } from './guides.repository';
 import { RegisterGuideDto } from './dto/register-guide.dto';
-import ErrorMessage from 'src/shared/constants/error-messages.constants';
+import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { AuthService } from '../auth/auth.service';
 
 @Injectable()

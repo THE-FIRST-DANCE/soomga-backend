@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { PlacesService } from './places.service';
-import { GooglePlaceResponse } from 'src/interfaces/google.interface';
+import { GooglePlaceResponse } from '../../interfaces/google.interface';
 import { PlaceAddDto } from './dto/place.dto';
 import { Place } from '@prisma/client';
 
