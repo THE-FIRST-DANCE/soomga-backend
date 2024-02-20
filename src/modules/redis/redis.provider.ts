@@ -5,6 +5,8 @@ export const redisProvider: Provider[] = [
   {
     provide: 'REDIS_CLIENT',
     useFactory: async () => {
+      console.log('REDIS_HOST', process.env.REDIS_HOST);
+      console.log('REDIS_PORT', process.env.REDIS_PORT);
       const client = createClient({
         url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
       });
