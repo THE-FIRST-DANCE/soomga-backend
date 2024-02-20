@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '@prisma/client';
-import ErrorMessage from 'src/shared/constants/error-messages.constants';
+import ErrorMessage from '../../shared/constants/error-messages.constants';
 
 @Injectable()
 export class AuthJwtGuard extends AuthGuard('jwt') {}

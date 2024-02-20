@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PlacesRepository } from './places.repository';
-import { GooglePlaceResponse } from 'src/interfaces/google.interface';
+import { GooglePlaceResponse } from '../../interfaces/google.interface';
 import { PlaceAddDto } from './dto/place.dto';
 import { Place } from '@prisma/client';
 

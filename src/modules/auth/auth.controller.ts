@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { AuthResponse, OAuthProfile } from '../../interfaces/auth.interface';
+import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthAdminGuard,
   AuthGoogleGuard,
@@ -23,7 +23,7 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ConfigService } from '@nestjs/config';
-import { SecurityConfig } from 'src/configs/config.interface';
+import { SecurityConfig } from '../../configs/config.interface';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
@@ -131,7 +131,6 @@ export class AuthController {
     return res.json({ message: '사용자 인증 테스트 API입니다.' });
   }
 
-  // guide jwt header 테스트
   @Get('guide/test')
   @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)

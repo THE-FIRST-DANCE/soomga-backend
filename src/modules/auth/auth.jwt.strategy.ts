@@ -6,9 +6,9 @@ import {
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
-import { AuthPayload } from 'src/interfaces/auth.interface';
+import { AuthPayload } from '../../interfaces/auth.interface';
 import { MembersService } from '../members/members.service';
-import ErrorMessage from 'src/shared/constants/error-messages.constants';
+import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { ConfigService } from '@nestjs/config';
 import { MemberStatus } from '@prisma/client';
 

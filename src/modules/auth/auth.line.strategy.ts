@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { LineProfile, OAuthProfile } from 'src/interfaces/auth.interface';
+import { LineProfile, OAuthProfile } from '../../interfaces/auth.interface';
 import { Provider } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Strategy } from 'passport-line';

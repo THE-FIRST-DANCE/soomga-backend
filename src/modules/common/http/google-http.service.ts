@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
   GooglePlaceDetail,
   GooglePlaceResponse,
-} from 'src/interfaces/google.interface';
+} from '../../../interfaces/google.interface';
 
 @Injectable()
 export class GoogleHttpService {

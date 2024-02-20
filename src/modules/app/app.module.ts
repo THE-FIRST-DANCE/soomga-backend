@@ -4,15 +4,15 @@ import { redisStore } from 'cache-manager-redis-yet';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { GLOBAL_CONFIG } from 'src/configs/global.config';
+import { AuthModule } from '../auth/auth.module';
+import { CoolsmsModule } from '../coolsms/coolsms.module';
+import { GuidesModule } from '../guides/guides.module';
 import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
-import { AuthModule } from '../auth/auth.module';
 import { PlacesModule } from '../places/places.module';
-import { GuidesModule } from '../guides/guides.module';
-import { CoolsmsModule } from '../coolsms/coolsms.module';
+
+import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 
 @Module({
