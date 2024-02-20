@@ -11,6 +11,10 @@ export const redisProvider: Provider[] = [
         url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
       });
 
+      client.on('error', (error) => {
+        console.error('Redis error', error);
+      });
+
       await client
         .connect()
         .then(() => {
