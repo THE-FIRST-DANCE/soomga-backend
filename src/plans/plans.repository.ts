@@ -14,62 +14,121 @@ export class PlansRepository {
     private readonly kakaoService: KakaoHttpService,
   ) {}
 
-  // 버스 경로 계산
-  async getAllDistance(data: PlanDistance) {
+  // 경로 계산
+  private async calculateDistances(data: PlanDistance, isCar: boolean = false) {
     const periods = Object.keys(data.list).map(Number);
     const allResults = [];
 
+    // 각 기간별 플랜 경로 계산
     for (const period of periods) {
       const promises = data.list[period].map(async (originPlace, i) => {
-        const destinations = data.list[period]
-          .filter((place) => place.item.placeId !== originPlace.item.placeId)
-          .map((place) => place.item.placeId);
-
+        // 출발지 제외한 목적지 리스트 추출
+        const destinations = this.extractDestinations(
+          data.list[period],
+          originPlace,
+        );
         const mode = data.transport;
 
-        const response = await this.googleService.getDistance(
-          originPlace.item.placeId,
-          destinations,
-          mode,
-        );
+        const response = isCar
+          ? await this.calculateCarDistance(originPlace, destinations)
+          : await this.calculateBusDistance(originPlace, destinations, mode);
 
-        const { rows } = response;
-
-        return rows[0].elements.map((element, index) => ({
-          period,
-          index: i,
-          placeId: data.list[period][i].item.id,
-          origin: data.list[period][i].item.placeId,
-          destination: destinations[index],
-          distance: element.distance.value,
-          duration: element.duration.value,
-          durationTime: element.duration.text,
-        }));
+        // 결과 데이터 포맷팅
+        return this.formatResponseData(response, period, i, data.list[period]);
       });
 
       const results = await Promise.all(promises);
       allResults.push(results.flat());
     }
 
+    return this.optimizeRoutes(allResults, periods, data);
+  }
+
+  // 버스 경로 계산
+  async getBusDistance(data: PlanDistance) {
+    return this.calculateDistances(data);
+  }
+
+  // 자동차 경로 계산
+  async getCarDistance(data: PlanDistance) {
+    return this.calculateDistances(data, true);
+  }
+
+  // 목적지 리스트에서 출발지 제외
+  private extractDestinations(list, originPlace) {
+    return list
+      .filter((place) => place.item.placeId !== originPlace.item.placeId)
+      .map((place) => place.item.placeId);
+  }
+
+  // 버스 거리 계산
+  private async calculateBusDistance(
+    originPlace,
+    destinations,
+    mode,
+  ): Promise<any> {
+    try {
+      return await this.googleService.getDistance(
+        originPlace.item.placeId,
+        destinations,
+        mode,
+      );
+    } catch (error) {
+      console.error(`Error calculating bus distance: ${error}`);
+      throw new Error(`Failed to calculate bus distance: ${error.message}`);
+    }
+  }
+
+  // 자동차 거리 계산
+  private async calculateCarDistance(originPlace, destinations) {
+    return await this.kakaoService.getDistance({
+      origin: {
+        y: originPlace.item.latitude,
+        x: originPlace.item.longitude,
+      },
+      destinations: destinations,
+      radius: 10000,
+    });
+  }
+
+  // 결과 데이터 포맷팅
+  private formatResponseData(response, period, i, list) {
+    return response.rows[0].elements.map((element, index) => ({
+      period,
+      index: i,
+      placeId: list[i].item.id,
+      origin: list[i].item.placeId,
+      destination: list[index].item.placeId,
+      distance: element.distance.value,
+      duration: element.duration.value,
+      durationTime: element.duration.text,
+    }));
+  }
+
+  // 경로 최적화
+  private async optimizeRoutes(allResults, periods, data) {
     const responses = await Promise.all(
       allResults.map(async (r) => {
         return await this.ortoolsService.getRoute(r);
       }),
     );
 
+    return this.formatOptimizedData(responses, periods, data);
+  }
+
+  // 최적화된 경로 데이터 포맷팅
+  private formatOptimizedData(responses, periods, data) {
     const newData = {};
 
+    // 각 기간별 최적화된 경로 데이터 포맷팅
     responses.forEach((response, index) => {
       const period = periods[index];
       newData[period] = [];
 
       response.forEach((res) => {
-        // 현재 위치의 item 정보를 찾습니다.
         const currentItem = data.list[period].find(
           (place) => place.item.id === res.id,
         );
-
-        // 다음 위치의 item 정보를 찾습니다.
         const nextItem = data.list[period].find(
           (place) => place.item.id === res.nextPlaceId,
         );
@@ -88,108 +147,7 @@ export class PlansRepository {
         }
       });
 
-      if (data.list[period].length > 0) {
-        const firstItem = data.list[period][0];
-        newData[period].push({
-          item: firstItem.item,
-          time: null,
-          nextTime: null,
-          nextPlaceId: null,
-          nextPlaceGoogleId: null,
-          nextLat: null,
-          nextLng: null,
-          nextPlaceName: null,
-        });
-      }
-    });
-
-    return newData;
-  }
-
-  // 차 경로 계산
-  async getCarDistance(data: PlanDistance) {
-    const periods = Object.keys(data.list).map(Number);
-    const allResults = [];
-
-    for (const period of periods) {
-      const promises = data.list[period].map(async (originPlace, i) => {
-        const destinations = data.list[period]
-          .filter((place) => place.item.placeId !== originPlace.item.placeId)
-          .map((place) => {
-            return {
-              y: place.item.latitude,
-              x: place.item.longitude,
-              key: place.item.id,
-              id: place.item.placeId,
-            };
-          });
-
-        const response = await this.kakaoService.getDistance({
-          origin: {
-            y: originPlace.item.latitude,
-            x: originPlace.item.longitude,
-          },
-          destinations: destinations,
-          radius: 10000,
-        });
-
-        return response.routes.map((route, index) => ({
-          period,
-          index: i,
-          placeId: data.list[period][i].item.id,
-          origin: data.list[period][i].item.placeId,
-          destination: destinations[index].id,
-          distance: route.summary.distance,
-          duration: route.summary.duration,
-        }));
-      });
-
-      const results = await Promise.all(promises);
-      allResults.push(results.flat());
-    }
-
-    const responses = await Promise.all(
-      allResults.map(async (r) => {
-        return await this.ortoolsService.getRoute(r);
-      }),
-    );
-
-    const newData = {};
-
-    responses.forEach((response, index) => {
-      const period = periods[index];
-      newData[period] = [];
-
-      response.forEach((res) => {
-        // 현재 위치의 item 정보를 찾습니다.
-        const currentItem = data.list[period].find(
-          (place) => place.item.id === res.id,
-        );
-
-        // 다음 위치의 item 정보를 찾습니다.
-        const nextItem = data.list[period].find(
-          (place) => place.item.id === res.nextPlaceId,
-        );
-
-        const covertToTime = (duration) => {
-          const minuate = Math.floor(duration / 60);
-          return `${minuate}분`;
-        };
-
-        if (currentItem && nextItem) {
-          newData[period].push({
-            item: currentItem.item,
-            time: res.time,
-            nextTime: covertToTime(res.nextTime),
-            nextPlaceId: res.nextPlaceId,
-            nextPlaceGoogleId: nextItem.item.placeId,
-            nextLat: nextItem.item.latitude,
-            nextLng: nextItem.item.longitude,
-            nextPlaceName: nextItem.item.name,
-          });
-        }
-      });
-
+      // 마지막에 첫 번째 아이템 추가
       if (data.list[period].length > 0) {
         const firstItem = data.list[period][0];
         newData[period].push({

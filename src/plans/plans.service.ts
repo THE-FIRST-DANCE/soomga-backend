@@ -9,7 +9,7 @@ export class PlansService {
   // 경로 계산
   async getAllDistance(data: PlanDistance) {
     if (data.transport === 'transit') {
-      return await this.plansRepository.getAllDistance(data);
+      return await this.plansRepository.getBusDistance(data);
     }
     return await this.plansRepository.getCarDistance(data);
   }
