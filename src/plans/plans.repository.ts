@@ -23,10 +23,9 @@ export class PlansRepository {
     for (const period of periods) {
       const promises = data.list[period].map(async (originPlace, i) => {
         // 출발지 제외한 목적지 리스트 추출
-        const destinations = this.extractDestinations(
-          data.list[period],
-          originPlace,
-        );
+        const destinations = isCar
+          ? this.carExtractDestinations(data.list[period], originPlace)
+          : this.busExtractDestinations(data.list[period], originPlace);
         const mode = data.transport;
 
         const response = isCar
@@ -34,7 +33,13 @@ export class PlansRepository {
           : await this.calculateBusDistance(originPlace, destinations, mode);
 
         // 결과 데이터 포맷팅
-        return this.formatResponseData(response, period, i, data.list[period]);
+        return this.formatResponseData(
+          response,
+          period,
+          i,
+          data.list[period],
+          isCar,
+        );
       });
 
       const results = await Promise.all(promises);
@@ -54,8 +59,22 @@ export class PlansRepository {
     return this.calculateDistances(data, true);
   }
 
-  // 목적지 리스트에서 출발지 제외
-  private extractDestinations(list, originPlace) {
+  // 자동차 목적지 리스트
+  private carExtractDestinations(list, originPlace) {
+    return list
+      .filter((place) => place.item.placeId !== originPlace.item.placeId)
+      .map((place) => {
+        return {
+          y: place.item.latitude,
+          x: place.item.longitude,
+          key: place.item.id,
+          id: place.item.placeId,
+        };
+      });
+  }
+
+  // 버스 목적지 리스트
+  private busExtractDestinations(list, originPlace) {
     return list
       .filter((place) => place.item.placeId !== originPlace.item.placeId)
       .map((place) => place.item.placeId);
@@ -74,7 +93,6 @@ export class PlansRepository {
         mode,
       );
     } catch (error) {
-      console.error(`Error calculating bus distance: ${error}`);
       throw new Error(`Failed to calculate bus distance: ${error.message}`);
     }
   }
@@ -92,17 +110,29 @@ export class PlansRepository {
   }
 
   // 결과 데이터 포맷팅
-  private formatResponseData(response, period, i, list) {
-    return response.rows[0].elements.map((element, index) => ({
-      period,
-      index: i,
-      placeId: list[i].item.id,
-      origin: list[i].item.placeId,
-      destination: list[index].item.placeId,
-      distance: element.distance.value,
-      duration: element.duration.value,
-      durationTime: element.duration.text,
-    }));
+  private formatResponseData(response, period, i, list, isCar) {
+    if (isCar) {
+      return response.routes.map((route, index) => ({
+        period,
+        index: i,
+        placeId: list[i].item.id,
+        origin: list[i].item.placeId,
+        destination: list[index].item.placeId,
+        distance: route.summary.distance,
+        duration: route.summary.duration,
+      }));
+    } else {
+      return response.rows[0].elements.map((element, index) => ({
+        period,
+        index: i,
+        placeId: list[i].item.id,
+        origin: list[i].item.placeId,
+        destination: list[index].item.placeId,
+        distance: element.distance.value,
+        duration: element.duration.value,
+        durationTime: element.duration.text,
+      }));
+    }
   }
 
   // 경로 최적화
@@ -132,6 +162,11 @@ export class PlansRepository {
         const nextItem = data.list[period].find(
           (place) => place.item.id === res.nextPlaceId,
         );
+
+        if (typeof res.nextTime === 'number') {
+          const minuate = Math.floor(res.nextTime / 60);
+          res.nextTime = `${minuate}분`;
+        }
 
         if (currentItem && nextItem) {
           newData[period].push({
