@@ -19,7 +19,7 @@ export class GoogleHttpService {
           key: process.env.GOOGLE_CLIENT_SEARCH_ID,
           keyword: query,
           location,
-          radius: 50000,
+          radius: 8000,
           pagetoken,
           language: 'ko',
         },
@@ -35,6 +35,28 @@ export class GoogleHttpService {
         params: {
           key: process.env.GOOGLE_CLIENT_SEARCH_ID,
           place_id: placeId,
+          language: 'ko',
+        },
+      },
+    );
+
+    return response.data;
+  }
+
+  async getDistance(origin: string, destinations: string[], mode: string) {
+    const origins = 'place_id:' + origin;
+    const destinationsString = destinations
+      .map((destination) => 'place_id:' + destination)
+      .join('|');
+
+    const response = await axios.get(
+      'https://maps.googleapis.com/maps/api/distancematrix/json',
+      {
+        params: {
+          key: process.env.GOOGLE_CLIENT_SEARCH_ID,
+          origins,
+          destinations: destinationsString,
+          mode: mode,
           language: 'ko',
         },
       },
