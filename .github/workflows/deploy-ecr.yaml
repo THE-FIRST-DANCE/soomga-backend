@@ -20,14 +20,42 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Login to Amazon ECR
+      id : login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build and push image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        IMAGE_TAG: ${{ github.sha }}
+    - name: Set global env vars
       run: |
-        TAG=${{ github.ref == 'refs/heads/main' && 'latest' || env.IMAGE_TAG }}
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$TAG
+        echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
+        echo "ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_ENV
+        echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+    - name: Set image env var
+      run: echo "IMAGE=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push
+      uses: docker/build-push-action@v2 # 
+      with:
+        context: .
+        push: true
+        tags: ${{ env.IMAGE }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: setting-task-definition
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ops/task-definition.json
+        container-name: soomga-nest-container
+        image: ${{ env.IMAGE }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.setting-task-definition.outputs.task-definition }}
+        service: soomga-service1
+        cluster: soomga-cluster
+        wait-for-service-stability: false

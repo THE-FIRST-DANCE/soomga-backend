@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,4 +7,344 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Member {
+  id         Int           @id @default(autoincrement())
+  email      String?       @unique
+  nickname   String
+  password   String
+  avatar     String?
+  birthdate  DateTime?     @default(now())
+  gender     Gender?
+  status     MemberStatus? @default(ACTIVE)
+  role       Role?         @default(USER)
+  provider   Provider?     @default(LOCAL)
+  providerId String?
+  createdAt  DateTime?     @default(now())
+  updatedAt  DateTime?     @updatedAt
+  deletedAt  DateTime?
 
+  tags         MemberTag[]
+  languages    MemberLanguage[]
+  boards       Board[]
+  boardLikes   BoardLike[]
+  plans        Plan[]
+  schedules    MemberSchedule[]
+  chatrooms    ChatroomParticipants[]
+  messages     ChatroomMessage[]
+  guideReviews GuideReview[]
+
+  guideProfile GuideProfile?
+}
+
+model GuideProfile {
+  id                  Int         @id @default(autoincrement())
+  temperatrue         Float?      @default(36.5)
+  service             String?
+  areas               GuideArea[]
+  phoneNumber         String?     @unique
+  verifiedAt          DateTime?
+  verifiedID          Boolean?    @default(false)
+  verifiedBankAccount Boolean?    @default(false)
+
+  memberId               Int                          @unique
+  member                 Member                       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  languageCertifications GuideLanguageCertification[]
+  reviews                GuideReview[]
+}
+
+model GuideReview {
+  id                 Int       @id @default(autoincrement())
+  communicationScore Int       @default(5)
+  kindnessScore      Int       @default(5)
+  locationScore      Int       @default(5)
+  content            String?
+  createdAt          DateTime? @default(now())
+  updatedAt          DateTime? @updatedAt
+
+  guideId    Int?
+  guide      GuideProfile? @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  reviewerId Int?
+  reviewer   Member?       @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+}
+
+model Board {
+  id        Int          @id @default(autoincrement())
+  title     String
+  overview  String?
+  content   String?
+  address   String?
+  type      BoardType?   @default(TRIP)
+  status    AcessStatus? @default(PUBLIC)
+  createdAt DateTime?    @default(now())
+  updatedAt DateTime?    @updatedAt
+  deletedAt DateTime?
+
+  tags  BoardTag[]
+  likes BoardLike[]
+
+  authorId Int?
+  author   Member? @relation(fields: [authorId], references: [id])
+}
+
+model BoardLike {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime? @default(now())
+
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, memberId])
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  members MemberTag[]
+  boards  BoardTag[]
+}
+
+model MemberTag {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  tagId Int
+  tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, tagId])
+}
+
+model BoardTag {
+  id Int @id @default(autoincrement())
+
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  tagId Int
+  tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, tagId])
+}
+
+model Language {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  certifications LanguageCertification[]
+  members        MemberLanguage[]
+}
+
+model MemberLanguage {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  languageId Int
+  language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, languageId])
+}
+
+model LanguageCertification {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  guideLanguageCertifications GuideLanguageCertification[]
+
+  languageId Int
+  language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+}
+
+model GuideLanguageCertification {
+  id Int @id @default(autoincrement())
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  languageCertificationId Int
+  languageCertification   LanguageCertification @relation(fields: [languageCertificationId], references: [id], onDelete: Cascade)
+
+  @@unique([guideId, languageCertificationId])
+}
+
+model Plan {
+  id        Int         @id @default(autoincrement())
+  title     String
+  content   String
+  status    AcessStatus @default(PUBLIC)
+  createdAt DateTime?   @default(now())
+  updatedAt DateTime?   @updatedAt
+  deletedAt DateTime?
+
+  authorId Int?
+  author   Member? @relation(fields: [authorId], references: [id])
+
+  schedules PlanSchedule[]
+}
+
+model PlanSchedule {
+  id       Int @id @default(autoincrement())
+  sequence Int
+
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  scheduleId Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  startTime   DateTime
+  endTime     DateTime
+
+  placeId Int?
+  place   Place? @relation(fields: [placeId], references: [id])
+
+  plans   PlanSchedule[]
+  members MemberSchedule[]
+}
+
+model MemberSchedule {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  scheduleId Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+}
+
+model Place {
+  id            Int     @id @default(autoincrement())
+  placeId       String  @unique
+  name          String
+  address       String?
+  description   String?
+  photo         String?
+  latitude      Float
+  longitude     Float
+  rating        Float
+  category      String
+  region        String
+  url           String
+  detailAddress String?
+  phone         String?
+
+  openingHours OpeningHours[]
+  schedules    Schedule[]
+  PlaceReview  PlaceReview[]
+}
+
+model OpeningHours {
+  id        Int    @id @default(autoincrement())
+  dayOfWeek Int
+  openTime  String
+  closeTime String
+
+  placeId Int
+  place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model PlaceReview {
+  id        Int       @id @default(autoincrement())
+  score     Int
+  content   String?
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  placeId Int
+  place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model Chatroom {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime? @default(now())
+  deletedAt DateTime?
+
+  members  ChatroomParticipants[]
+  messages ChatroomMessage[]
+}
+
+model ChatroomParticipants {
+  id Int @id @default(autoincrement())
+
+  chatroomId Int
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model ChatroomMessage {
+  id        Int       @id @default(autoincrement())
+  content   Json
+  createdAt DateTime? @default(now())
+
+  chatroomId Int
+  chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
+
+  memberId Int
+  sender   Member @relation(fields: [memberId], references: [id])
+}
+
+model Area {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  guides GuideArea[]
+}
+
+model GuideArea {
+  id Int @id @default(autoincrement())
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  areaId Int
+  area   Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+  LINE
+}
+
+enum Role {
+  USER
+  GUIDE
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum AcessStatus {
+  PUBLIC
+  PRIVATE
+  DELETED
+}
+
+enum BoardType {
+  TRIP
+  SOS
+  NOTICE
+}

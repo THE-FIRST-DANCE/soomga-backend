@@ -12,7 +12,7 @@ export const GLOBAL_CONFIG: Config = {
     enabled: process.env.NODE_ENV !== 'production',
     title: 'Soomga API',
     description: 'The Soomga API description',
-    version: packageJson.version,
+    version: packageJson.version || '0.0.0',
     path: '/api/v1',
   },
   redis: {
@@ -21,7 +21,8 @@ export const GLOBAL_CONFIG: Config = {
     port: +process.env.REDIS_PORT || 6379,
   },
   security: {
-    expiresIn: 3600 * 24, // 24h
+    accessTokenExpiresIn: 1000 * 60 * 60 * 0.5, // 0.5 hour
+    refreshTokenExpiresIn: 1000 * 60 * 60 * 24 * 14, // 14 days
     bcryptSaltOrRound: 10,
   },
 };

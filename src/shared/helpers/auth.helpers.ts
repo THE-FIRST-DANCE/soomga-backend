@@ -21,7 +21,20 @@ const verify = (password: string, hash: string): Promise<boolean> => {
   });
 };
 
+const generateRandomPassword = (): string => {
+  const randomPassword = randomBytes(8).toString('hex');
+  return randomPassword;
+};
+
+// 6자리 인증코드 생성 (숫자 + 대문자)
+const generateAuthCode = (): string => {
+  const authCode = randomBytes(3).toString('hex').toUpperCase();
+  return authCode;
+};
+
 export const AuthHelpers = {
   hash,
   verify,
+  generateRandomPassword,
+  generateAuthCode,
 };

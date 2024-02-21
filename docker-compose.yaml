@@ -7,6 +7,7 @@ services:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
+      TZ: Asia/Seoul
     volumes:
       - ./data:/var/lib/postgresql/data
     ports:

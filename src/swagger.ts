@@ -12,6 +12,12 @@ export function swaggerSetup(app: INestApplication) {
       .setTitle(swaggerConfig.title || 'NestJS API')
       .setDescription(swaggerConfig.description || 'NestJS API description')
       .setVersion(swaggerConfig.version || '1.0')
+      .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        'x-tokenName': 'accessToken',
+        bearerFormat: 'JWT',
+      })
       .build();
     const document = SwaggerModule.createDocument(app, options);
 
