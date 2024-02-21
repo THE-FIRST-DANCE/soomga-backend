@@ -8,9 +8,11 @@ import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
 import { AuthModule } from '../auth/auth.module';
 import { PlacesModule } from '../places/places.module';
+import { PlansModule } from 'src/plans/plans.module';
 
 @Module({
   imports: [
+    PlansModule,
     PlacesModule,
     AuthModule,
     MembersModule,
