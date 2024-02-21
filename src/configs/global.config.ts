@@ -3,7 +3,7 @@ import packageJson from '../../package.json';
 
 export const GLOBAL_CONFIG: Config = {
   nest: {
-    port: process.env.PORT || 3000,
+    port: process.env.APP_PORT || 3000,
   },
   cors: {
     enabled: true,

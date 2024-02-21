@@ -3,17 +3,22 @@ import { JwtService } from '@nestjs/jwt';
 import { MembersService } from '../members/members.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { OAuthProfile } from '../../interfaces/auth.interface';
+import { AuthCodePayload, OAuthProfile } from '../../interfaces/auth.interface';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { AuthHelpers } from '../../shared/helpers/auth.helpers';
 import { OAuthSignUpDto } from './dto/oauth-sign-up.dto';
 import { Member } from '@prisma/client';
+import { CoolsmsService } from '../coolsms/coolsms.service';
+import { AuthRepository } from './auth.repository';
 
+const AUTH_CODE_MAX_ATTEMPTS = 5;
 @Injectable()
 export class AuthService {
   constructor(
     private readonly membersService: MembersService,
     private readonly jwtService: JwtService,
+    private readonly authRepository: AuthRepository,
+    private readonly coolsmsService: CoolsmsService,
   ) {}
 
   async signIn(signInDto: SignInDto) {
@@ -49,6 +54,46 @@ export class AuthService {
       member = await this.membersService.create(newMember);
     }
     return this.generateTokens(member);
+  }
+
+  async sendAuthCode(memberId: number, phoneNumber: string) {
+    const attempts =
+      await this.authRepository.getAuthCodeSendAttempts(phoneNumber);
+    if (attempts >= AUTH_CODE_MAX_ATTEMPTS) {
+      throw new UnauthorizedException(ErrorMessage.TOO_MANY_ATTEMPTS);
+    }
+
+    const authCode = AuthHelpers.generateAuthCode();
+
+    const authCodePayload: AuthCodePayload = {
+      sub: memberId,
+      authCode,
+      phoneNumber,
+    };
+    await this.coolsmsService.sendAuthCode(phoneNumber, authCode);
+    await this.authRepository.increaseAuthCodeSendAttempts(phoneNumber);
+    await this.authRepository.cacheAuthCode(authCodePayload);
+
+    return authCode;
+  }
+
+  async validateAuthCode(id: number, authCode: string, phoneNumber: string) {
+    const attempts = await this.authRepository.getAuthCodeValidateAttempts(id);
+    if (attempts >= AUTH_CODE_MAX_ATTEMPTS) {
+      throw new UnauthorizedException(ErrorMessage.TOO_MANY_ATTEMPTS);
+    }
+    await this.authRepository.increaseAuthCodeValidateAttempts(id);
+
+    const authCodeCache = await this.authRepository.getAuthCode(phoneNumber);
+    if (
+      !authCodeCache ||
+      authCodeCache.sub !== id ||
+      authCodeCache.authCode !== authCode
+    ) {
+      throw new UnauthorizedException(ErrorMessage.INVALID_AUTH_CODE);
+    }
+    await this.authRepository.resetAuthCode(phoneNumber);
+    await this.authRepository.resetAuthCodeValidateAttempts(id);
   }
 
   private generateTokens(member: Member) {

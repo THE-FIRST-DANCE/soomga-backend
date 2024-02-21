@@ -61,9 +61,8 @@ export async function memberSeed(client: PrismaClient) {
     })),
   );
 
-  for (const data of memberData) {
-    await client.member.create({
-      data,
-    });
-  }
+  await client.member.createMany({
+    data: memberData,
+    skipDuplicates: true,
+  });
 }

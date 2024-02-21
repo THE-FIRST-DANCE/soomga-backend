@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpStatus,
   Post,
   Req,
   Res,
@@ -11,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { AuthResponse, OAuthProfile } from '../../interfaces/auth.interface';
+import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthAdminGuard,
   AuthGoogleGuard,
@@ -24,7 +23,7 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ConfigService } from '@nestjs/config';
-import { SecurityConfig } from 'src/configs/config.interface';
+import { SecurityConfig } from '../../configs/config.interface';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
@@ -36,7 +35,7 @@ export class AuthController {
 
   // 로그인
   @Post('signin')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(200)
   @ApiOperation({
     summary: '로그인',
     description: '사용자 로그인을 처리합니다.',
@@ -60,7 +59,7 @@ export class AuthController {
 
   // 로그아웃
   @Post('signout')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(200)
   @ApiOperation({
     summary: '로그아웃',
     description: '사용자 로그아웃을 처리합니다.',
@@ -74,7 +73,7 @@ export class AuthController {
 
   // 회원가입
   @Post('signup')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(201)
   @ApiOperation({
     summary: '회원가입',
     description: '새 사용자 등록을 처리합니다.',
@@ -132,7 +131,6 @@ export class AuthController {
     return res.json({ message: '사용자 인증 테스트 API입니다.' });
   }
 
-  // guide jwt header 테스트
   @Get('guide/test')
   @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
@@ -185,6 +183,9 @@ export class AuthController {
       await this.authService.signInWithOAuth(req.user);
 
     this.setCookies(res, accessToken, refreshToken);
+
+    // return res.redirect('back');
+    // TODO: 나중에 프론트엔드로 리다이렉트할 수 있도록 수정
 
     return res.json({
       message: 'Line 로그인 되었습니다.',

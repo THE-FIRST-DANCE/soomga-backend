@@ -40,3 +40,9 @@ export interface OAuthProfile {
   providerId: string;
   accessToken: string;
 }
+
+export interface AuthCodePayload {
+  sub: number;
+  authCode: string;
+  phoneNumber: string;
+}

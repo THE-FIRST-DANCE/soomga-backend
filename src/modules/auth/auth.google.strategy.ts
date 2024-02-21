@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { GoogleProfile, OAuthProfile } from 'src/interfaces/auth.interface';
+import { GoogleProfile, OAuthProfile } from '../../interfaces/auth.interface';
 import { Provider } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 
