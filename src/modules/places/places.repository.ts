@@ -60,12 +60,15 @@ export class PlacesRepository {
       },
     });
 
+    // 장소가 이미 존재하는 경우
     if (placeExist) {
       throw new Error('Place already exist');
     }
 
+    // 장소 상세 정보 조회
     const placeDetail = await this.getDetail(place.placeId);
 
+    // 장소 추가
     const createPlace = await this.prismaService.place.create({
       data: {
         name: place.name,
@@ -83,9 +86,8 @@ export class PlacesRepository {
       },
     });
 
+    // 영업시간 추가
     if (placeDetail.result.opening_hours) {
-      console.log(placeDetail.result.opening_hours.periods);
-
       const periods = placeDetail.result.opening_hours.periods.map((period) => {
         return {
           close: period.close?.time ?? '',
