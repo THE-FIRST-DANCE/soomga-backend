@@ -1,3 +1,5 @@
+import { Place } from '@prisma/client';
+
 export interface GooglePlaceResponse {
   next_page_token: string;
   results: GooglePlace[];
@@ -44,4 +46,46 @@ export interface GooglePlaceDetailPeriods {
     day: number;
     time: string;
   };
+}
+
+export interface GoogleDistanceResponse {
+  destination_addresses: string[];
+  origin_addresses: string[];
+  rows: GoogleDistanceRow[];
+}
+
+export interface GoogleDistanceRow {
+  elements: GoogleDistanceElement[];
+}
+
+export interface GoogleDistanceElement {
+  distance: {
+    text: string;
+    value: number;
+  };
+  duration: {
+    text: string;
+    value: number;
+  };
+  status: string;
+}
+
+export interface GoogleAIData {
+  from: string;
+  to: string[];
+  distance: GoogleDistanceElement[];
+}
+
+export interface PlanDistance {
+  list: PeriodPlan;
+  transport: string;
+}
+
+export interface PeriodPlan {
+  [period: number]: PlanList[];
+}
+
+export interface PlanList {
+  item: Place;
+  time: string;
 }
