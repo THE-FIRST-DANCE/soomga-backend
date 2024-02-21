@@ -28,22 +28,22 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
       useFactory: async (
         configService: ConfigService,
       ): Promise<CacheModuleOptions> => {
-        try {
-          const redis = await redisStore({
-            ttl: 30_000,
-            socket: {
-              host: configService.get('REDIS_HOST'),
-              port: configService.get('REDIS_PORT'),
-            },
-          });
-          return { store: redis };
-        } catch (error) {
-          console.error(
-            'Failed to connect to Redis, using in-memory cache instead.',
-            error,
-          );
-          return { store: 'memory', ttl: 30_000 };
-        }
+        // try {
+        //   const redis = await redisStore({
+        //     ttl: 30_000,
+        //     socket: {
+        //       host: configService.get('REDIS_HOST'),
+        //       port: configService.get('REDIS_PORT'),
+        //     },
+        //   });
+        //   return { store: redis };
+        // } catch (error) {
+        //   console.error(
+        //     'Failed to connect to Redis, using in-memory cache instead.',
+        //     error,
+        //   );
+        return { store: 'memory', ttl: 30_000 };
+        // }
       },
       inject: [ConfigService],
     }),
