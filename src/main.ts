@@ -8,10 +8,6 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 
 async function bootstrap() {
-  // FIXME: log config; delete later
-  console.log('port: ', process.env.PORT);
-  console.log('env: ', process.env);
-
   const app = await NestFactory.create(AppModule, {
     // logger: ['error', 'warn', 'debug', 'log'],
   });
