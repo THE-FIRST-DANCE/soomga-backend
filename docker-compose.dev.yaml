@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+      TZ: Asia/Seoul
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - ${DATABASE_PORT}:5432
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: l.juhyeonni@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: 123qwe
+    volumes:
+      - ./pgadmin4:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    depends_on:
+      - db
+  redis:
+    image: redis:6.2.5
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server /usr/local/conf/redis.conf
+    volumes:
+      - ./redis/redis.conf:/usr/local/conf/redis.conf
+      - ./redis/data:/data
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - ./src:/usr/src/app/src
+    env_file:
+      - .env.dev
