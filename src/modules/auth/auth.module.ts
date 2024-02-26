@@ -11,6 +11,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LineStrategy } from './auth.line.strategy';
 import { CoolsmsModule } from '../coolsms/coolsms.module';
 import { AuthRepository } from './auth.repository';
+import { SecurityConfig } from '../../configs/config.interface';
+import { JwtRefreshStrategy } from './auth.jwt-refresh.strategy';
 
 @Module({
   imports: [
@@ -22,6 +24,10 @@ import { AuthRepository } from './auth.repository';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn:
+            configService.get<SecurityConfig>('security').accessTokenExpiresIn,
+        },
       }),
     }),
   ],
@@ -29,6 +35,7 @@ import { AuthRepository } from './auth.repository';
     AuthService,
     MembersService,
     JwtStrategy,
+    JwtRefreshStrategy,
     GoogleStrategy,
     LineStrategy,
     AuthRepository,
