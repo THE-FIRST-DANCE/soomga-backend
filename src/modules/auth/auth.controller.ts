@@ -16,6 +16,7 @@ import {
   AuthGoogleGuard,
   AuthGuideGuard,
   AuthJwtGuard,
+  AuthJwtRefreshGuard,
   AuthLineGuard,
   AuthUserGuard,
 } from './auth.guard';
@@ -24,14 +25,22 @@ import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ConfigService } from '@nestjs/config';
 import { SecurityConfig } from '../../configs/config.interface';
+import { Member } from '@prisma/client';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
 export class AuthController {
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
+
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    const securityConfig = this.configService.get<SecurityConfig>('security');
+    this.accessTokenExpiresIn = securityConfig.accessTokenExpiresIn;
+    this.refreshTokenExpiresIn = securityConfig.refreshTokenExpiresIn;
+  }
 
   // 로그인
   @Post('signin')
@@ -195,13 +204,24 @@ export class AuthController {
     });
   }
 
-  private setCookies(res: Response, accessToken: string, refreshToken: string) {
-    const securityConfig = this.configService.get<SecurityConfig>('security');
+  @UseGuards(AuthJwtRefreshGuard)
+  @Post('refresh')
+  async refresh(@Req() req: { user: Member }, @Res() res: Response) {
+    const accessToken = await this.authService.restoreAccessToken(req.user);
+
     res.cookie('accessToken', accessToken, {
-      maxAge: securityConfig.accessTokenExpiresIn,
+      maxAge: this.accessTokenExpiresIn,
+    });
+
+    res.json({ message: 'accessToken 재발급 완료' });
+  }
+
+  private setCookies(res: Response, accessToken: string, refreshToken: string) {
+    res.cookie('accessToken', accessToken, {
+      maxAge: this.accessTokenExpiresIn,
     });
     res.cookie('refreshToken', refreshToken, {
-      maxAge: securityConfig.refreshTokenExpiresIn,
+      maxAge: this.refreshTokenExpiresIn,
     });
   }
 }
