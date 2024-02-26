@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         ExtractJwt.fromUrlQueryParameter('token'),
         cookieExtractor,
       ]),
-      ignoreExpiration: process.env.NODE_ENV === 'dev',
+      ignoreExpiration: process.env.NODE_ENV !== 'production',
       secretOrKey: configService.get<string>('JWT_SECRET'),
     });
   }
