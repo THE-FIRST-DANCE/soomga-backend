@@ -221,7 +221,7 @@ export class AuthController {
       maxAge: this.accessTokenExpiresIn,
     });
     res.cookie('refreshToken', refreshToken, {
-      maxAge: this.accessTokenExpiresIn,
+      maxAge: this.refreshTokenExpiresIn,
     });
   }
 }
