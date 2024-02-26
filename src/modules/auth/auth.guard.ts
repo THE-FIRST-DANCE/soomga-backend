@@ -11,7 +11,7 @@ import ErrorMessage from '../../shared/constants/error-messages.constants';
 export class AuthJwtGuard extends AuthGuard('jwt') {}
 
 @Injectable()
-export class AuthJwtRefreshGuard extends AuthGuard('jwt') {}
+export class AuthJwtRefreshGuard extends AuthGuard('refresh') {}
 
 @Injectable()
 export class AuthAdminGuard extends AuthGuard('jwt') {
