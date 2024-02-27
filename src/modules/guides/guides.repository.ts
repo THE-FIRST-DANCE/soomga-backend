@@ -62,7 +62,7 @@ export class GuidesRepository {
         guideProfile: {
           upsert: {
             where: {
-              memberId: id,
+              id,
             },
             create: {},
             update: {},
@@ -84,7 +84,7 @@ export class GuidesRepository {
   async updateAreas(id: number, areaIds: number[]) {
     const currentAreaIds = await this.prismaService.guideArea
       .findMany({
-        where: { guide: { memberId: id } },
+        where: { guide: { id } },
         select: {
           areaId: true,
         },
@@ -102,7 +102,7 @@ export class GuidesRepository {
     }
 
     return this.prismaService.guideProfile.update({
-      where: { memberId: id },
+      where: { id },
       data: {
         areas: {
           deleteMany: {
@@ -129,7 +129,7 @@ export class GuidesRepository {
       await this.prismaService.guideLanguageCertification
         .findMany({
           where: {
-            guide: { memberId: id },
+            guide: { id },
           },
           select: {
             languageCertificationId: true,
@@ -154,7 +154,7 @@ export class GuidesRepository {
     }
 
     return this.prismaService.guideProfile.update({
-      where: { memberId: id },
+      where: { id },
       data: {
         languageCertifications: {
           deleteMany: {
@@ -179,7 +179,7 @@ export class GuidesRepository {
   async leaveGuide(id: number) {
     return this.prismaService.$transaction([
       this.prismaService.guideProfile.delete({
-        where: { memberId: id },
+        where: { id },
       }),
       this.prismaService.member.update({
         where: { id },
@@ -196,7 +196,7 @@ export class GuidesRepository {
 
   async registerPhoneNumber(id: number, phoneNumber: string) {
     return this.prismaService.guideProfile.update({
-      where: { memberId: id },
+      where: { id },
       data: { phoneNumber },
     });
   }

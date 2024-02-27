@@ -37,8 +37,8 @@ model Member {
 }
 
 model GuideProfile {
-  id                  Int         @id @default(autoincrement())
-  temperatrue         Float?      @default(36.5)
+  id                  Int         @id
+  temperature         Float?      @default(36.5)
   service             String?
   areas               GuideArea[]
   phoneNumber         String?     @unique
@@ -46,8 +46,7 @@ model GuideProfile {
   verifiedID          Boolean?    @default(false)
   verifiedBankAccount Boolean?    @default(false)
 
-  memberId               Int                          @unique
-  member                 Member                       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member                 Member                       @relation(fields: [id], references: [id], onDelete: Cascade)
   languageCertifications GuideLanguageCertification[]
   reviews                GuideReview[]
 }
