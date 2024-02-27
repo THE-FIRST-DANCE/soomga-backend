@@ -87,5 +87,5 @@ export interface PeriodPlan {
 
 export interface PlanList {
   item: Place;
-  time: string;
+  stayTime: string;
 }
