@@ -4,30 +4,28 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Strategy } from 'passport-jwt';
 import { Request } from 'express';
-import { AuthPayload } from '../../interfaces/auth.interface';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 import { MembersService } from '../members/members.service';
-import ErrorMessage from '../../shared/constants/error-messages.constants';
+import ErrorMessage from 'src/shared/constants/error-messages.constants';
 import { ConfigService } from '@nestjs/config';
 import { MemberStatus } from '@prisma/client';
+import { JwtService } from '@nestjs/jwt';
 
 const cookieExtractor = (req: Request) => {
-  return req.cookies.accessToken;
+  return req.cookies.refreshToken;
 };
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
   constructor(
     private readonly membersService: MembersService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
-        ExtractJwt.fromUrlQueryParameter('token'),
-        cookieExtractor,
-      ]),
+      jwtFromRequest: cookieExtractor,
       ignoreExpiration: process.env.NODE_ENV !== 'production',
       secretOrKey: configService.get<string>('JWT_SECRET'),
     });

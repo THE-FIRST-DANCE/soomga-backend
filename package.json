@@ -18,7 +18,13 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:seed": "ts-node prisma/seeds/index.ts"
+    "prisma:seed": "ts-node prisma/seeds/index.ts",
+    "compose:devBuild": "docker compose -f docker-compose.dev.yaml build",
+    "compose:devUp": "docker compose -f docker-compose.dev.yaml up",
+    "compose:devDown": "docker compose -f docker-compose.dev.yaml down",
+    "compose:prodBuild": "docker compose -f docker-compose.prod.yaml build",
+    "compose:prodUp": "docker compose -f docker-compose.prod.yaml up",
+    "compose:prodDown": "docker compose -f docker-compose.prod.yaml down"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.2.1",
