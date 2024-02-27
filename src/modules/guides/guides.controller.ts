@@ -18,7 +18,6 @@ import { Response } from 'express';
 import { UpdateAreasDto } from './dto/update-areas.dto';
 import { UpdateLanguageCertificationsDto } from './dto/update-language-certifications.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
-import { SendAuthCodeDto } from './dto/send-authcode.dto';
 import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 
 @ApiTags('가이드 API')
@@ -117,24 +116,6 @@ export class GuidesController {
     await this.guidesService.leaveGuide(id);
 
     return res.json({ message: '가이드 탈퇴가 완료되었습니다.' });
-  }
-
-  @Post('auth-code')
-  @UseGuards(AuthGuideGuard)
-  @ApiOperation({
-    summary: '인증코드 발송',
-    description: '가이드에게 인증코드를 발송합니다.',
-  })
-  async sendAuthCode(
-    @Req() req: { user: Member },
-    @Body() { phoneNumber }: SendAuthCodeDto,
-    @Res() res: Response,
-  ) {
-    const { id } = req.user;
-
-    await this.guidesService.sendAuthCode(id, phoneNumber);
-
-    return res.json({ message: '인증코드가 발송되었습니다.' });
   }
 
   @Post('register/phone-number')

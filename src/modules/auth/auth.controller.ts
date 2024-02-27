@@ -26,6 +26,7 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { ConfigService } from '@nestjs/config';
 import { SecurityConfig } from '../../configs/config.interface';
 import { Member } from '@prisma/client';
+import { SendAuthCodeDto } from './dto/send-authcode.dto';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
@@ -152,6 +153,24 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<Response> {
     return res.json({ message: '가이드 인증 테스트 API입니다.' });
+  }
+
+  @Post('auth-code')
+  @UseGuards(AuthJwtGuard)
+  @ApiOperation({
+    summary: '인증코드 발송',
+    description: '가이드에게 인증코드를 발송합니다.',
+  })
+  async sendAuthCode(
+    @Req() req: { user: Member },
+    @Body() { phoneNumber }: SendAuthCodeDto,
+    @Res() res: Response,
+  ) {
+    const { id } = req.user;
+
+    await this.authService.sendAuthCode(id, phoneNumber);
+
+    return res.json({ message: '인증코드가 발송되었습니다.' });
   }
 
   // google oauth 로그인

@@ -37,10 +37,6 @@ export class GuidesService {
     return this.guidesRepository.leaveGuide(id);
   }
 
-  async sendAuthCode(id: number, phoneNumber: string) {
-    return this.authService.sendAuthCode(id, phoneNumber);
-  }
-
   async registerPhoneNumber(id: number, phoneNumber: string, authCode: string) {
     await this.checkPhoneNumberValid(phoneNumber);
 
