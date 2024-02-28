@@ -25,4 +25,8 @@ export const GLOBAL_CONFIG: Config = {
     refreshTokenExpiresIn: 1000 * 60 * 60 * 24 * 14, // 14 days
     bcryptSaltOrRound: 10,
   },
+  base: {
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+    backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
+  },
 };

@@ -4,6 +4,7 @@ export interface Config {
   swagger: SwaggerConfig;
   redis: RedisConfig;
   security: SecurityConfig;
+  base: BaseConfig;
 }
 
 export interface NestConfig {
@@ -32,4 +33,9 @@ export interface SecurityConfig {
   accessTokenExpiresIn: number;
   refreshTokenExpiresIn: number;
   bcryptSaltOrRound: string | number;
+}
+
+export interface BaseConfig {
+  frontendUrl: string;
+  backendUrl: string;
 }

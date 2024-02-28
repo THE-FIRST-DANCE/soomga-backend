@@ -24,23 +24,22 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ConfigService } from '@nestjs/config';
-import { SecurityConfig } from '../../configs/config.interface';
+import { BaseConfig, SecurityConfig } from '../../configs/config.interface';
 import { Member } from '@prisma/client';
 import { SendAuthCodeDto } from './dto/send-authcode.dto';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
 export class AuthController {
-  accessTokenExpiresIn: number;
-  refreshTokenExpiresIn: number;
+  base: BaseConfig;
+  security: SecurityConfig;
 
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
-    const securityConfig = this.configService.get<SecurityConfig>('security');
-    this.accessTokenExpiresIn = securityConfig.accessTokenExpiresIn;
-    this.refreshTokenExpiresIn = securityConfig.refreshTokenExpiresIn;
+    this.base = this.configService.get<BaseConfig>('base');
+    this.security = this.configService.get<SecurityConfig>('security');
   }
 
   // 로그인
@@ -229,7 +228,7 @@ export class AuthController {
     const accessToken = await this.authService.restoreAccessToken(req.user);
 
     res.cookie('accessToken', accessToken, {
-      maxAge: this.accessTokenExpiresIn,
+      maxAge: this.security.accessTokenExpiresIn,
     });
 
     res.json({ message: 'accessToken 재발급 완료' });
@@ -237,10 +236,10 @@ export class AuthController {
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {
     res.cookie('accessToken', accessToken, {
-      maxAge: this.accessTokenExpiresIn,
+      maxAge: this.security.accessTokenExpiresIn,
     });
     res.cookie('refreshToken', refreshToken, {
-      maxAge: this.refreshTokenExpiresIn,
+      maxAge: this.security.refreshTokenExpiresIn,
     });
   }
 }
