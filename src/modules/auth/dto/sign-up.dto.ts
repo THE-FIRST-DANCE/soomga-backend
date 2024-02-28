@@ -35,7 +35,9 @@ export class SignUpDto {
   @Match('password')
   passwordConfirm: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   birthdate?: string | Date;

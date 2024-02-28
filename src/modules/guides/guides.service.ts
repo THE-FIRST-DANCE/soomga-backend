@@ -3,6 +3,8 @@ import { GuidesRepository } from './guides.repository';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { AuthService } from '../auth/auth.service';
+import { createPageResponse } from 'src/shared/pagination/pagination.utils';
+import { GuidePaginationOptions } from './guides.interface';
 
 @Injectable()
 export class GuidesService {
@@ -10,6 +12,25 @@ export class GuidesService {
     private readonly guidesRepository: GuidesRepository,
     private readonly authService: AuthService,
   ) {}
+
+  async findAll() {
+    return this.guidesRepository.findAll();
+  }
+
+  async paginate(
+    cursor: number | null,
+    limit: number,
+    options?: GuidePaginationOptions,
+  ) {
+    const guides = await this.guidesRepository.paginate(cursor, limit, options);
+    const response = createPageResponse(
+      guides,
+      { cursor, limit },
+      guides.length,
+    );
+
+    return response;
+  }
 
   async findOne(id: number) {
     return this.guidesRepository.findOne(id);

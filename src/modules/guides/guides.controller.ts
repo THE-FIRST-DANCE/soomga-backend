@@ -5,25 +5,93 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuideGuard, AuthUserGuard } from '../auth/auth.guard';
+import {
+  AuthAdminGuard,
+  AuthGuideGuard,
+  AuthUserGuard,
+} from '../auth/auth.guard';
 import { GuidesService } from './guides.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegisterGuideDto } from './dto/register-guide.dto';
-import { Member } from '@prisma/client';
+import { Gender, Member } from '@prisma/client';
 import { Response } from 'express';
 import { UpdateAreasDto } from './dto/update-areas.dto';
 import { UpdateLanguageCertificationsDto } from './dto/update-language-certifications.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
 import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
+import { Pagination } from '../../shared/decorators/pagination.decorator';
+import {
+  ParseIntArrayPipe,
+  ParseIntWithDefaultPipe,
+  ParseRangePipe,
+} from '../../shared/pagination/pagination.pipe';
+import {
+  GuideOrderBy,
+  GuidePaginationOptions,
+  GuideSort,
+} from './guides.interface';
+import { ParseGenderPipe } from './guides.pipe';
+import { GuidePagination } from './guides.decorator';
 
 @ApiTags('가이드 API')
 @Controller('guides')
 export class GuidesController {
   constructor(private readonly guidesService: GuidesService) {}
+
+  @Get()
+  @UseGuards(AuthAdminGuard)
+  @ApiOperation({
+    summary: '가이드 목록 조회',
+    description: '모든 가이드의 정보를 조회합니다.',
+  })
+  async findAll() {
+    return this.guidesService.findAll();
+  }
+
+  @Get('/search')
+  @ApiOperation({
+    summary: '가이드 검색',
+    description: '가이드를 query에 따라 검색합니다.',
+  })
+  @Pagination()
+  @GuidePagination()
+  async search(
+    @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
+    @Query('limit', ParseIntWithDefaultPipe) limit?: number,
+    @Query('gender', ParseGenderPipe) gender?: Gender,
+    @Query('age', ParseRangePipe) age?: { min: number; max: number },
+    @Query('guideCount', ParseRangePipe)
+    guideCount?: { min: number; max: number },
+    @Query('temperature', ParseRangePipe)
+    temperature?: { min: number; max: number },
+    @Query('areas', ParseIntArrayPipe) areas?: number[],
+    @Query('languages', ParseIntArrayPipe) languages?: number[],
+    @Query('languageCertifications', ParseIntArrayPipe)
+    languageCertifications?: number[],
+    @Query('score', ParseIntArrayPipe) score?: number[],
+    @Query('orderBy') orderBy?: GuideOrderBy,
+    @Query('sort') sort?: GuideSort,
+  ) {
+    const options: GuidePaginationOptions = {
+      gender,
+      age,
+      guideCount,
+      temperature,
+      areas,
+      languages,
+      languageCertifications,
+      score,
+      orderBy,
+      sort,
+    };
+
+    return this.guidesService.paginate(cursor, limit, options);
+  }
 
   @Get(':id')
   @ApiOperation({
