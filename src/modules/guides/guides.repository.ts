@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import { MembersRepository } from '../members/members.repository';
+import {
+  GuidePaginatedData,
+  GuidePaginationOptions,
+  GuideWithMatchingAvgScore,
+} from './guides.interface';
+import { DateHelpers } from 'src/shared/helpers/date.helpers';
 
 @Injectable()
 export class GuidesRepository {
@@ -14,20 +20,220 @@ export class GuidesRepository {
   async findAll() {
     return this.prismaService.member.findMany({
       where: { role: Role.GUIDE },
+      select: {
+        id: true,
+        nickname: true,
+        avatar: true,
+        birthdate: true,
+        email: true,
+        gender: true,
+        provider: true,
+        providerId: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        guideProfile: true,
+      },
     });
   }
 
-  async paginate(page: number, perPage: number) {
-    return this.prismaService.member.findMany({
-      where: { role: Role.GUIDE },
-      skip: (page - 1) * perPage,
-      take: perPage,
-      include: {
-        _count: {
-          select: { boards: true },
+  async paginate(
+    cursor?: number,
+    limit = 10,
+    options?: GuidePaginationOptions,
+  ) {
+    const whereCondition = this.buildWhereCondition(cursor, options);
+    const orderBy = this.buildOrderBy(options);
+
+    const guidesWithMatchingAvgScores =
+      await this.getGuidesWithMatchingAvgScores(
+        options?.score ?? [0, 1, 2, 3, 4, 5],
+      );
+
+    const guides: GuidePaginatedData[] =
+      await this.prismaService.member.findMany({
+        where: whereCondition,
+        take: limit,
+        orderBy: orderBy,
+        select: {
+          id: true,
+          nickname: true,
+          avatar: true,
+          birthdate: true,
+          languages: {
+            select: {
+              language: true,
+            },
+          },
+          guideProfile: {
+            select: {
+              areas: {
+                select: {
+                  area: true,
+                },
+              },
+              temperature: true,
+            },
+          },
+          guideReviews: {},
+          tags: {
+            select: {
+              tag: true,
+            },
+          },
         },
-      },
+      });
+
+    const result = this.enrichGuides(guides, {
+      guidesWithMatchingAvgScores,
     });
+
+    return result;
+  }
+
+  private enrichGuides(
+    guides: GuidePaginatedData[],
+    additional: {
+      guidesWithMatchingAvgScores?: GuideWithMatchingAvgScore[];
+    },
+  ) {
+    const { guidesWithMatchingAvgScores } = additional;
+
+    if (guidesWithMatchingAvgScores) {
+      return guides.map((guide) => {
+        const matching = guidesWithMatchingAvgScores.find(
+          (item) => item.guideId === guide.id,
+        );
+
+        return {
+          ...guide,
+          avgLocationScore: +matching?.avgLocationScore || 0,
+          avgKindnessScore: +matching?.avgKindnessScore || 0,
+          avgCommunicationScore: +matching?.avgCommunicationScore || 0,
+          totalAvgScore: +matching?.totalAvgScore || 0,
+        };
+      });
+    }
+  }
+
+  private buildOrderBy({
+    orderBy,
+    sort,
+  }: Pick<
+    GuidePaginationOptions,
+    'orderBy' | 'sort'
+  >): Prisma.MemberOrderByWithRelationInput {
+    if (!orderBy) {
+      return { id: 'desc' };
+    }
+
+    if (orderBy === 'guideCount') {
+      return { guideReviews: { _count: sort } };
+    }
+
+    if (orderBy === 'temperature') {
+      return { guideProfile: { temperature: sort } };
+    }
+  }
+
+  private buildWhereCondition(
+    cursor?: number,
+    options?: GuidePaginationOptions,
+  ): Prisma.MemberWhereInput {
+    const {
+      areas,
+      age,
+      gender,
+      guideCount,
+      languageCertifications,
+      languages,
+      score,
+      temperature,
+    } = options;
+
+    const whereCondition: Prisma.MemberWhereInput = {
+      role: Role.GUIDE,
+    };
+
+    if (cursor) {
+      whereCondition.id = { lt: cursor };
+    }
+
+    if (gender) {
+      whereCondition.gender = options.gender;
+    }
+
+    if (age) {
+      const { start, end } = DateHelpers.calculateBirthdateRange(
+        age.min,
+        age.max,
+      );
+      whereCondition.birthdate = {
+        gte: start,
+        lte: end,
+      };
+    }
+
+    // TODO:
+    // guideCount
+
+    if (temperature) {
+      whereCondition.guideProfile = {
+        temperature: {
+          gte: temperature.min,
+          lte: temperature.max,
+        },
+      };
+    }
+
+    if (areas) {
+      whereCondition.guideProfile = {
+        areas: {
+          some: {
+            areaId: { in: areas },
+          },
+        },
+      };
+    }
+
+    if (languages) {
+      whereCondition.languages = {
+        some: {
+          languageId: { in: languages },
+        },
+      };
+    }
+
+    if (languageCertifications) {
+      whereCondition.guideProfile = {
+        languageCertifications: {
+          some: {
+            languageCertificationId: { in: languageCertifications },
+          },
+        },
+      };
+    }
+
+    return whereCondition;
+  }
+
+  async getGuidesWithMatchingAvgScores(
+    scores: number[],
+  ): Promise<GuideWithMatchingAvgScore[]> {
+    return this.prismaService.$queryRaw`
+      SELECT
+        "guideId",
+        AVG("communicationScore") AS "avgCommunicationScore",
+        AVG("kindnessScore") AS "avgKindnessScore",
+        AVG("locationScore") AS "avgLocationScore",
+        ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3) AS "totalAvgScore"
+      FROM
+        Public."GuideReview"
+      GROUP BY
+        "guideId"
+      HAVING
+        ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3) = ANY(${scores})
+    `;
   }
 
   /**
