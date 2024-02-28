@@ -37,6 +37,7 @@ import {
 } from './guides.interface';
 import { ParseGenderPipe } from './guides.pipe';
 import { GuidePagination } from './guides.decorator';
+import { UpdateServiceDto } from './dto/update-service.dto';
 
 @ApiTags('가이드 API')
 @Controller('guides')
@@ -171,6 +172,23 @@ export class GuidesController {
     );
 
     return res.json({ message: '가이드 언어 자격증 정보가 수정되었습니다.' });
+  }
+
+  @Put('update/service')
+  @UseGuards(AuthGuideGuard)
+  @ApiOperation({
+    summary: '가이드 서비스 수정',
+    description: '가이드의 서비스 정보를 수정합니다.',
+  })
+  async updateService(
+    @Req() req: { user: Member },
+    @Body() { content }: UpdateServiceDto,
+    @Res() res: Response,
+  ) {
+    const { id } = req.user;
+    await this.guidesService.updateService(id, content);
+
+    return res.json({ message: '가이드 서비스 정보가 수정되었습니다.' });
   }
 
   @Post('leave')

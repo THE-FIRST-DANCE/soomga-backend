@@ -378,6 +378,14 @@ export class GuidesRepository {
     });
   }
 
+  async updateService(id: number, content: string) {
+    return this.prismaService.guideProfile.update({
+      where: { id },
+      data: { service: content },
+    });
+  }
+
+
   /**
    * 가이드에서 탈퇴하고, 멤버의 역할을 USER로 업데이트합니다.
    * @param id - 제거할 가이드의 ID.

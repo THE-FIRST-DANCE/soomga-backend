@@ -54,6 +54,10 @@ export class GuidesService {
     );
   }
 
+  async updateService(id: number, content: string) {
+    return this.guidesRepository.updateService(id, content);
+  }
+
   async leaveGuide(id: number) {
     return this.guidesRepository.leaveGuide(id);
   }
