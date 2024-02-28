@@ -3,7 +3,7 @@ import { GuidesRepository } from './guides.repository';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { AuthService } from '../auth/auth.service';
-import { createPageResponse } from 'src/shared/pagination/pagination.utils';
+import { createPageResponse } from '../../shared/pagination/pagination.utils';
 import { GuidePaginationOptions } from './guides.interface';
 
 @Injectable()
