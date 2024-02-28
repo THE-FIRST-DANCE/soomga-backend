@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SendAuthCodeDto } from './send-authcode.dto';
+import { SendAuthCodeDto } from '../../auth/dto/send-authcode.dto';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class RegisterPhoneNumberDto extends SendAuthCodeDto {
