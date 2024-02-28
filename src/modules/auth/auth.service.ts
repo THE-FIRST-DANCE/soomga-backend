@@ -43,7 +43,8 @@ export class AuthService {
 
   async signUp(signUpDto: SignUpDto) {
     await this.membersService.checkValidEmail(signUpDto.email);
-    const member = await this.membersService.create(signUpDto);
+    const { passwordConfirm, ...rest } = signUpDto;
+    const member = await this.membersService.create(rest);
     return this.generateTokens(member);
   }
 

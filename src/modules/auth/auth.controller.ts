@@ -8,17 +8,14 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
-  AuthAdminGuard,
   AuthGoogleGuard,
-  AuthGuideGuard,
   AuthJwtGuard,
   AuthJwtRefreshGuard,
   AuthLineGuard,
-  AuthUserGuard,
 } from './auth.guard';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
@@ -42,7 +39,6 @@ export class AuthController {
     this.security = this.configService.get<SecurityConfig>('security');
   }
 
-  // 로그인
   @Post('signin')
   @HttpCode(200)
   @ApiOperation({
@@ -66,7 +62,6 @@ export class AuthController {
     });
   }
 
-  // 로그아웃
   @Post('signout')
   @HttpCode(200)
   @ApiOperation({
@@ -80,7 +75,6 @@ export class AuthController {
     return res.json({ message: '로그아웃 되었습니다.' });
   }
 
-  // 회원가입
   @Post('signup')
   @HttpCode(201)
   @ApiOperation({
@@ -99,59 +93,6 @@ export class AuthController {
       refreshToken,
       user,
     });
-  }
-
-  // jwt header 테스트
-  @Get('test')
-  @ApiBearerAuth()
-  @UseGuards(AuthJwtGuard)
-  @ApiOperation({
-    summary: '테스트',
-    description: '테스트용 API입니다.',
-  })
-  async test(@Req() req: Request, @Res() res: Response): Promise<Response> {
-    return res.json({ message: '사용자 인증 테스트 API입니다.' });
-  }
-
-  // admin jwt header 테스트
-  @Get('admin/test')
-  @ApiBearerAuth()
-  @UseGuards(AuthAdminGuard)
-  @ApiOperation({
-    summary: '관리자 테스트',
-    description: '관리자용 테스트 API입니다.',
-  })
-  async adminTest(
-    @Req() req: Request,
-    @Res() res: Response,
-  ): Promise<Response> {
-    return res.json({ message: '관리자 인증 테스트 API입니다.' });
-  }
-
-  // user jwt header 테스트
-  @Get('user/test')
-  @ApiBearerAuth()
-  @UseGuards(AuthUserGuard)
-  @ApiOperation({
-    summary: '사용자 테스트',
-    description: '사용자용 테스트 API입니다.',
-  })
-  async userTest(@Req() req: Request, @Res() res: Response): Promise<Response> {
-    return res.json({ message: '사용자 인증 테스트 API입니다.' });
-  }
-
-  @Get('guide/test')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuideGuard)
-  @ApiOperation({
-    summary: '가이드 테스트',
-    description: '가이드용 테스트 API입니다.',
-  })
-  async guideTest(
-    @Req() req: Request,
-    @Res() res: Response,
-  ): Promise<Response> {
-    return res.json({ message: '가이드 인증 테스트 API입니다.' });
   }
 
   @Post('auth-code')
@@ -175,7 +116,7 @@ export class AuthController {
   // google oauth 로그인
   @Get('google')
   @UseGuards(AuthGoogleGuard)
-  async googleLogin(@Req() req: Request) {}
+  async googleLogin() {}
 
   @Get('line')
   @UseGuards(AuthLineGuard)
@@ -184,47 +125,34 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGoogleGuard)
   async googleAuthRedirect(
-    @Req() req: { user: OAuthProfile },
+    @Req() req: Request & { user: OAuthProfile },
     @Res() res: Response,
   ) {
-    const { accessToken, refreshToken, user } =
+    const { accessToken, refreshToken } =
       await this.authService.signInWithOAuth(req.user);
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.json({
-      message: 'Google 로그인 되었습니다.',
-      accessToken,
-      refreshToken,
-      user,
-    });
+    return res.redirect(`${this.base.frontendUrl}/redirect`);
   }
 
   @Get('line/callback')
   @UseGuards(AuthLineGuard)
   async lineAuthRedirect(
-    @Req() req: { user: OAuthProfile },
+    @Req() req: Request & { user: OAuthProfile },
     @Res() res: Response,
   ) {
-    const { accessToken, refreshToken, user } =
+    const { accessToken, refreshToken } =
       await this.authService.signInWithOAuth(req.user);
 
     this.setCookies(res, accessToken, refreshToken);
 
-    // return res.redirect('back');
-    // TODO: 나중에 프론트엔드로 리다이렉트할 수 있도록 수정
-
-    return res.json({
-      message: 'Line 로그인 되었습니다.',
-      accessToken,
-      refreshToken,
-      user,
-    });
+    return res.redirect(`${this.base.frontendUrl}/redirect`);
   }
 
   @UseGuards(AuthJwtRefreshGuard)
   @Post('refresh')
-  async refresh(@Req() req: { user: Member }, @Res() res: Response) {
+  async refresh(@Req() req: Request & { user: Member }, @Res() res: Response) {
     const accessToken = await this.authService.restoreAccessToken(req.user);
 
     res.cookie('accessToken', accessToken, {
