@@ -175,51 +175,44 @@ model GuideLanguageCertification {
 model Plan {
   id        Int         @id @default(autoincrement())
   title     String
-  content   String
   status    AcessStatus @default(PUBLIC)
+  region    String
+  transport String
+  period    Int
   createdAt DateTime?   @default(now())
   updatedAt DateTime?   @updatedAt
   deletedAt DateTime?
 
-  authorId Int?
-  author   Member? @relation(fields: [authorId], references: [id])
+  daySchedules   DaySchedule[]
 
-  schedules PlanSchedule[]
+  authorId Int
+  author   Member @relation(fields: [authorId], references: [id])
 }
 
-model PlanSchedule {
-  id       Int @id @default(autoincrement())
-  sequence Int
+model DaySchedule {
+  id        Int       @id @default(autoincrement())
+  day       Int
+  schedules Schedule[]
 
-  planId Int
-  plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
-
-  scheduleId Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  planId    Int      
+  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Schedule {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  startTime   DateTime
-  endTime     DateTime
+  id            Int      @id @default(autoincrement())
+  placeId       Int
+  item          Place    @relation(fields: [placeId], references: [id])
+  nextLat       Float?
+  nextLng       Float?
+  nextPlaceId   Int?
+  nextPlaceName String?
+  nextTime      String?
+  stayTime      String?
 
-  placeId Int?
-  place   Place? @relation(fields: [placeId], references: [id])
+  dayScheduleId Int
+  daySchedule DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade )
 
-  plans   PlanSchedule[]
   members MemberSchedule[]
-}
-
-model MemberSchedule {
-  id Int @id @default(autoincrement())
-
-  memberId Int
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  scheduleId Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 }
 
 model Place {
@@ -238,8 +231,8 @@ model Place {
   detailAddress String?
   phone         String?
 
-  openingHours OpeningHours[]
   schedules    Schedule[]
+  openingHours OpeningHours[]
   PlaceReview  PlaceReview[]
 }
 
@@ -251,6 +244,16 @@ model OpeningHours {
 
   placeId Int
   place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model MemberSchedule {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  scheduleId Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 }
 
 model PlaceReview {
