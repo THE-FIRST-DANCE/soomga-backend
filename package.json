@@ -27,6 +27,8 @@
     "compose:prodDown": "docker compose -f docker-compose.prod.yaml down"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@nestjs/axios": "^3.0.2",
     "@nestjs/cache-manager": "^2.2.1",
     "@nestjs/common": "^10.3.2",
     "@nestjs/config": "^3.2.0",
@@ -35,6 +37,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.3.2",
     "@nestjs/swagger": "^7.3.0",
+    "@nestjs/terminus": "^10.2.3",
     "@prisma/client": "^5.9.1",
     "axios": "^1.6.7",
     "bcrypt": "^5.1.1",
