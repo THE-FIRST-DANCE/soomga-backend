@@ -15,6 +15,7 @@ import { PlansModule } from 'src/plans/plans.module';
 
 import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
+import { HealthModule } from '../health/health.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
     MembersModule,
     LoggerModule,
     CoolsmsModule,
+    HealthModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
