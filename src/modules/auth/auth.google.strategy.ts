@@ -11,7 +11,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
       clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
-      callbackURL: 'http://localhost:3000/auth/google/callback', // Google에 등록한 리다이렉션 URI
+      callbackURL: '/auth/google/callback', // Google에 등록한 리다이렉션 URI
       scope: ['email', 'profile'], // Google로부터 요청할 정보
     });
   }
