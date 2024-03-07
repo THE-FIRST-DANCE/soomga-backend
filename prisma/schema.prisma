@@ -86,7 +86,6 @@ model Board {
 }
 
 model BoardLike {
-  id        Int       @id @default(autoincrement())
   createdAt DateTime? @default(now())
 
   boardId Int
@@ -107,8 +106,6 @@ model Tag {
 }
 
 model MemberTag {
-  id Int @id @default(autoincrement())
-
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
@@ -119,8 +116,6 @@ model MemberTag {
 }
 
 model BoardTag {
-  id Int @id @default(autoincrement())
-
   boardId Int
   board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
@@ -139,8 +134,6 @@ model Language {
 }
 
 model MemberLanguage {
-  id Int @id @default(autoincrement())
-
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
@@ -161,8 +154,6 @@ model LanguageCertification {
 }
 
 model GuideLanguageCertification {
-  id Int @id @default(autoincrement())
-
   guideId Int
   guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
 
