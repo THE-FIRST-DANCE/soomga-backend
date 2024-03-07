@@ -15,9 +15,7 @@ export class PrismaService
   async onModuleInit() {
     await this.$connect();
 
-    this.$on('error', (_e) => {
-      // Do something
-    });
+    this.$on('error', (e) => {});
   }
 
   async onModuleDestroy() {
