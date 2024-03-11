@@ -3,13 +3,19 @@ import { PrismaClient } from '@prisma/client';
 import { memberSeed } from './member.seed';
 import { languageSeed } from './language.seed';
 import { areaSeed } from './area.seed';
+import { guideSeed } from './guide.seed';
+import { defaultMemberSeed } from './default-member.seed';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await memberSeed(prisma);
-  await areaSeed(prisma);
-  await languageSeed(prisma);
+  prisma.$transaction(async (prisma) => {
+    await defaultMemberSeed(prisma);
+    await areaSeed(prisma);
+    await languageSeed(prisma);
+    await memberSeed(prisma);
+    await guideSeed(prisma);
+  });
 }
 main()
   .then(async () => {

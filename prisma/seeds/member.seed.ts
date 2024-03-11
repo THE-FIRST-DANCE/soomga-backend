@@ -1,68 +1,39 @@
-import { MemberStatus, Role, PrismaClient } from '@prisma/client';
-import { AuthHelpers } from '../../src/shared/helpers/auth.helpers';
+import { MemberStatus, Role, Prisma, Gender } from '@prisma/client';
 
-const members = [
-  {
-    email: 'admin@test.com',
-    password: 'admin',
-    nickname: 'admin',
-    status: MemberStatus.ACTIVE,
-    role: Role.ADMIN,
-  },
-  {
-    email: 'user1@test.com',
-    password: 'user1',
-    nickname: 'user1',
-    status: MemberStatus.ACTIVE,
-    role: Role.USER,
-  },
-  {
-    email: 'user2@test.com',
-    password: 'user2',
-    nickname: 'user2',
-    status: MemberStatus.INACTIVE,
-    role: Role.USER,
-  },
-  {
-    email: 'user3@test.com',
-    password: 'user3',
-    nickname: 'user3',
-    status: MemberStatus.DELETED,
-    role: Role.USER,
-  },
-  {
-    email: 'guide1@test.com',
-    password: 'guide1',
-    nickname: 'guide1',
-    status: MemberStatus.ACTIVE,
-    role: Role.GUIDE,
-  },
-  {
-    email: 'guide2@test.com',
-    password: 'guide2',
-    nickname: 'guide2',
-    status: MemberStatus.INACTIVE,
-    role: Role.GUIDE,
-  },
-  {
-    email: 'guide3@test.com',
-    password: 'guide3',
-    nickname: 'guide3',
-    status: MemberStatus.DELETED,
-    role: Role.GUIDE,
-  },
-];
+import { TransactionClient } from './common.interface';
+import { faker } from '@faker-js/faker';
+import { hashMembersPassword } from './utils';
 
-export async function memberSeed(client: PrismaClient) {
-  const memberData = await Promise.all(
-    members.map(async (member) => ({
-      ...member,
-      password: await AuthHelpers.hash(member.password),
-    })),
+function createMember(): Prisma.MemberCreateInput {
+  const email = faker.internet.email();
+  const password = faker.internet.password();
+  const nickname = faker.internet.userName();
+  const birthdate = faker.date.birthdate();
+  const gender = faker.helpers.enumValue(Gender);
+  const status = faker.helpers.enumValue(MemberStatus);
+  const role = Role.USER;
+
+  return {
+    email,
+    password,
+    nickname,
+    birthdate,
+    gender,
+    status,
+    role,
+  };
+}
+
+export async function memberSeed(client: TransactionClient) {
+  const fakerMembers = Array.from({ length: 30 }, createMember);
+
+  const memberData = await hashMembersPassword(fakerMembers);
+
+  await Promise.all(
+    memberData.map((member) => {
+      return client.member.create({
+        data: member,
+      });
+    }),
   );
-
-  await client.member.createMany({
-    data: memberData,
-    skipDuplicates: true,
-  });
 }
