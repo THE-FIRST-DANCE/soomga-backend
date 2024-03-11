@@ -13,9 +13,9 @@ import { Request, Response } from 'express';
 import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthGoogleGuard,
-  AuthJwtGuard,
   AuthJwtRefreshGuard,
   AuthLineGuard,
+  AuthMemberGuard,
 } from './auth.guard';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
@@ -24,6 +24,7 @@ import { ConfigService } from '@nestjs/config';
 import { BaseConfig, SecurityConfig } from '../../configs/config.interface';
 import { Member } from '@prisma/client';
 import { SendAuthCodeDto } from './dto/send-authcode.dto';
+import { User } from './auth.decorator';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
@@ -81,9 +82,9 @@ export class AuthController {
     summary: '회원가입',
     description: '새 사용자 등록을 처리합니다.',
   })
-  async signUp(@Body() body: SignUpDto, @Res() res: Response) {
+  async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
     const { accessToken, refreshToken, user } =
-      await this.authService.signUp(body);
+      await this.authService.signUp(signUpDto);
 
     this.setCookies(res, accessToken, refreshToken);
 
@@ -96,17 +97,17 @@ export class AuthController {
   }
 
   @Post('auth-code')
-  @UseGuards(AuthJwtGuard)
+  @UseGuards(AuthMemberGuard)
   @ApiOperation({
     summary: '인증코드 발송',
     description: '가이드에게 인증코드를 발송합니다.',
   })
   async sendAuthCode(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() { phoneNumber }: SendAuthCodeDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
 
     await this.authService.sendAuthCode(id, phoneNumber);
 
@@ -152,8 +153,8 @@ export class AuthController {
 
   @UseGuards(AuthJwtRefreshGuard)
   @Post('refresh')
-  async refresh(@Req() req: Request & { user: Member }, @Res() res: Response) {
-    const accessToken = await this.authService.restoreAccessToken(req.user);
+  async refresh(@User() user: Member, @Res() res: Response) {
+    const accessToken = await this.authService.restoreAccessToken(user);
 
     res.cookie('accessToken', accessToken, {
       maxAge: this.security.accessTokenExpiresIn,
