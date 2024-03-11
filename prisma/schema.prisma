@@ -73,7 +73,7 @@ model Board {
   content   String?
   address   String?
   type      BoardType?   @default(TRIP)
-  status    AcessStatus? @default(PUBLIC)
+  status    AccessStatus? @default(PUBLIC)
   createdAt DateTime?    @default(now())
   updatedAt DateTime?    @updatedAt
   deletedAt DateTime?
@@ -166,7 +166,7 @@ model GuideLanguageCertification {
 model Plan {
   id        Int         @id @default(autoincrement())
   title     String
-  status    AcessStatus @default(PUBLIC)
+  status    AccessStatus @default(PUBLIC)
   region    String
   transport String
   period    Int
@@ -330,7 +330,7 @@ enum MemberStatus {
   DELETED
 }
 
-enum AcessStatus {
+enum AccessStatus {
   PUBLIC
   PRIVATE
   DELETED
