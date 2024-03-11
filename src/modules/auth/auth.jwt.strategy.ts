@@ -10,7 +10,6 @@ import { AuthPayload } from '../../interfaces/auth.interface';
 import { MembersService } from '../members/members.service';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { ConfigService } from '@nestjs/config';
-import { MemberStatus } from '@prisma/client';
 
 const cookieExtractor = (req: Request) => {
   return req.cookies.accessToken;
@@ -38,13 +37,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     if (!member) {
       throw new UnauthorizedException(ErrorMessage.UNAUTHORIZED);
-    }
-
-    if (
-      member.status === MemberStatus.DELETED ||
-      member.status === MemberStatus.INACTIVE
-    ) {
-      throw new ForbiddenException(ErrorMessage.FORBIDDEN_MEMBER);
     }
 
     return member;

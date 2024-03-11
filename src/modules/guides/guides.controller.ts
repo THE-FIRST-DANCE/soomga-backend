@@ -38,6 +38,7 @@ import {
 import { ParseGenderPipe } from './guides.pipe';
 import { GuidePagination } from './guides.decorator';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { User } from '../auth/auth.decorator';
 
 @ApiTags('가이드 API')
 @Controller('guides')
@@ -110,11 +111,11 @@ export class GuidesController {
     description: '가이드로 등록합니다.',
   })
   async registerGuide(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() registerGuideDto: RegisterGuideDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
     await this.guidesService.registerGuide(+id, registerGuideDto);
 
     return res.json({ message: '가이드 등록이 완료되었습니다.' });
@@ -127,11 +128,11 @@ export class GuidesController {
     description: '가이드의 활동지역 정보를 수정합니다.',
   })
   async updateAreas(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() { areaIds }: UpdateAreasDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
     await this.guidesService.updateAreas(id, areaIds);
 
     return res.json({ message: '가이드 활동지역 정보가 수정되었습니다.' });
@@ -144,11 +145,11 @@ export class GuidesController {
     description: '가이드의 언어 정보를 수정합니다.',
   })
   async updateLanguage(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() { languageIds }: UpdateLanguagesDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
     await this.guidesService.updateLanguageCertifications(id, languageIds);
 
     return res.json({ message: '가이드 언어 정보가 수정되었습니다.' });
@@ -161,11 +162,11 @@ export class GuidesController {
     description: '가이드의 언어 자격증 정보를 수정합니다.',
   })
   async updateLanguageCertifications(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() { languageCertificationIds }: UpdateLanguageCertificationsDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
     await this.guidesService.updateLanguageCertifications(
       id,
       languageCertificationIds,
@@ -181,11 +182,11 @@ export class GuidesController {
     description: '가이드의 서비스 정보를 수정합니다.',
   })
   async updateService(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() { content }: UpdateServiceDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
     await this.guidesService.updateService(id, content);
 
     return res.json({ message: '가이드 서비스 정보가 수정되었습니다.' });
@@ -197,8 +198,8 @@ export class GuidesController {
     summary: '가이드 탈퇴',
     description: '가이드를 탈퇴합니다. 유저로 전환됩니다.',
   })
-  async leaveGuide(@Req() req: { user: Member }, @Res() res: Response) {
-    const { id } = req.user;
+  async leaveGuide(@User() user: Member, @Res() res: Response) {
+    const { id } = user;
     await this.guidesService.leaveGuide(id);
 
     return res.json({ message: '가이드 탈퇴가 완료되었습니다.' });
@@ -211,11 +212,11 @@ export class GuidesController {
     description: '가이드의 휴대폰 번호를 등록합니다.',
   })
   async registerPhoneNumber(
-    @Req() req: { user: Member },
+    @User() user: Member,
     @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
     @Res() res: Response,
   ) {
-    const { id } = req.user;
+    const { id } = user;
     const { phoneNumber, authCode } = registerPhoneNumberDto;
     await this.guidesService.registerPhoneNumber(id, phoneNumber, authCode);
 

@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-jwt';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { AuthPayload } from 'src/interfaces/auth.interface';
 import { MembersService } from '../members/members.service';
@@ -25,7 +25,11 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
     private readonly jwtService: JwtService,
   ) {
     super({
-      jwtFromRequest: cookieExtractor,
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ExtractJwt.fromUrlQueryParameter('token'),
+        cookieExtractor,
+      ]),
       ignoreExpiration: process.env.NODE_ENV !== 'production',
       secretOrKey: configService.get<string>('JWT_SECRET'),
     });
