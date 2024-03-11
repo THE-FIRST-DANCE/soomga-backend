@@ -15,6 +15,7 @@ import { PlansModule } from 'src/plans/plans.module';
 
 import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
+import { AdminModule } from '../admin/admin.module';
 import { HealthModule } from '../health/health.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { HealthModule } from '../health/health.module';
     PlansModule,
     PlacesModule,
     AuthModule,
+    AdminModule,
     GuidesModule,
     MembersModule,
     LoggerModule,
