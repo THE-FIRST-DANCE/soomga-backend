@@ -4,7 +4,7 @@ import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { MembersRepository } from './members.repository';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { AuthHelpers } from '../../shared/helpers/auth.helpers';
-import { $Enums } from '@prisma/client';
+import { Provider } from '@prisma/client';
 
 @Injectable()
 export class MembersService {
@@ -48,11 +48,19 @@ export class MembersService {
     return true;
   }
 
-  async findByProvider(provider: $Enums.Provider, providerId: string) {
+  async findByProvider(provider: Provider, providerId: string) {
     return this.membersRepository.findByProvider(provider, providerId);
   }
 
   async updateLanguages(id: number, languageIds: number[]) {
     return this.membersRepository.updateLanguages(id, languageIds);
+  }
+
+  async leave(id: number) {
+    return this.membersRepository.leave(id);
+  }
+
+  async comeback(id: number) {
+    return this.membersRepository.comeback(id);
   }
 }
