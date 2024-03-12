@@ -7,17 +7,19 @@ import {
   Param,
   Delete,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { MembersService } from './members.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthAdminGuard } from '../auth/auth.guard';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateLanguageDto } from './dto/update-language.dto';
+import { Response } from 'express';
+import { Member } from '@prisma/client';
+import { AuthDeletedGuard, AuthMemberGuard } from '../auth/auth.guard';
+import { User } from '../auth/auth.decorator';
 
 @ApiTags('멤버 API')
-@UseGuards(AuthAdminGuard)
-@ApiBearerAuth()
 @Controller('members')
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
@@ -38,6 +40,32 @@ export class MembersController {
   @Get()
   findAll() {
     return this.membersService.findAll();
+  }
+
+  @ApiOperation({
+    summary: '멤버 탈퇴',
+    description: '특정 아이디를 가진 멤버를 탈퇴 처리합니다.',
+  })
+  @Get('leave')
+  @UseGuards(AuthMemberGuard)
+  async leave(@User() user: Member, @Res() res: Response) {
+    const { id } = user;
+    await this.membersService.leave(id);
+
+    return res.json({ message: '탈퇴 처리가 완료되었습니다.' });
+  }
+
+  @ApiOperation({
+    summary: '멤버 복귀',
+    description: '특정 아이디를 가진 멤버를 복귀 처리합니다.',
+  })
+  @Get('comeback')
+  @UseGuards(AuthDeletedGuard)
+  async comback(@User() user: Member, @Res() res: Response) {
+    const { id } = user;
+    await this.membersService.comeback(id);
+
+    return res.json({ message: '복귀 처리가 완료되었습니다.' });
   }
 
   @ApiOperation({
