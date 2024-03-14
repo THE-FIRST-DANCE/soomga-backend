@@ -12,6 +12,11 @@ export class PlansService {
     return await this.plansRepository.getPlan(authorId);
   }
 
+  // 플랜 id로 가져오기
+  async getPlanById(planId: number) {
+    return await this.plansRepository.getPlanById(planId);
+  }
+
   // 경로 계산
   async getAllDistance(data: PlanDistance) {
     if (data.transport === 'transit') {

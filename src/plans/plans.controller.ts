@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { PlansService } from './plans.service';
 import { PlanDistance } from 'src/interfaces/google.interface';
 import { PlanAddDto } from './dto/plans.dto';
@@ -11,6 +11,12 @@ export class PlansController {
   @Get()
   async getPlan(@Query() param: { authorId: number }) {
     return await this.plansService.getPlan(param.authorId);
+  }
+
+  // 플랜 id로 가져오기
+  @Get(':planId')
+  async getPlanById(@Param('planId') planId: number) {
+    return await this.plansService.getPlanById(Number(planId));
   }
 
   // 경로 계산

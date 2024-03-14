@@ -408,4 +408,24 @@ export class PlansRepository {
       }
     }
   }
+
+  // 플랜 id로 가져오기
+  async getPlanById(planId: number) {
+    return await this.prismaService.plan.findUnique({
+      where: {
+        id: planId,
+      },
+      include: {
+        daySchedules: {
+          include: {
+            schedules: {
+              include: {
+                item: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }
