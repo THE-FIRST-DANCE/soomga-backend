@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { $Enums, Prisma } from '@prisma/client';
+import { MemberStatus, Prisma, Provider } from '@prisma/client';
 
 @Injectable()
 export class MembersRepository {
@@ -41,7 +41,7 @@ export class MembersRepository {
     });
   }
 
-  async findByProvider(provider: $Enums.Provider, providerId: string) {
+  async findByProvider(provider: Provider, providerId: string) {
     return this.prismaService.member.findMany({
       where: {
         AND: [{ provider }, { providerId }],
@@ -69,7 +69,7 @@ export class MembersRepository {
       return;
     }
 
-    return await this.prismaService.member.update({
+    return this.prismaService.member.update({
       where: { id },
       data: {
         languages: {
@@ -83,6 +83,105 @@ export class MembersRepository {
             skipDuplicates: true,
           },
         },
+      },
+    });
+  }
+
+  async updateTags(id: number, tagIds: number[]) {
+    const currentTagIds = await this.prismaService.memberTag
+      .findMany({
+        where: { memberId: id },
+      })
+      .then((result) => result.map(({ tagId }) => tagId));
+    const tagIdsToCreate = tagIds.filter((id) => !currentTagIds.includes(id));
+    const tagIdsToDelete = currentTagIds.filter((id) => !tagIds.includes(id));
+
+    if (tagIdsToCreate.length === 0 && tagIdsToDelete.length === 0) {
+      return;
+    }
+
+    return this.prismaService.member.update({
+      where: { id },
+      data: {
+        tags: {
+          deleteMany: {
+            tagId: { in: tagIdsToDelete },
+          },
+          createMany: {
+            data: tagIdsToCreate.map((tagId) => ({ tagId })),
+            skipDuplicates: true,
+          },
+        },
+      },
+    });
+  }
+
+  async leave(id: number) {
+    return this.prismaService.member.update({
+      where: { id },
+      data: {
+        status: MemberStatus.DELETED,
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  async inactiveMembers(ids: number[]) {
+    return this.prismaService.member.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      data: {
+        status: MemberStatus.INACTIVE,
+      },
+    });
+  }
+
+  async activeMembers(ids: number[]) {
+    return this.prismaService.member.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      data: {
+        status: MemberStatus.ACTIVE,
+      },
+    });
+  }
+
+  async softDeleteMembers(ids: number[]) {
+    return this.prismaService.member.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      data: {
+        status: MemberStatus.DELETED,
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  async hardDeleteMembers(ids: number[]) {
+    return this.prismaService.member.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+  }
+
+  async comeback(id: number) {
+    return this.prismaService.member.update({
+      where: { id },
+      data: {
+        status: MemberStatus.ACTIVE,
+        deletedAt: null,
       },
     });
   }

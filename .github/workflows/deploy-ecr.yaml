@@ -56,6 +56,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.setting-task-definition.outputs.task-definition }}
-        service: soomga-service1
-        cluster: soomga-cluster
+        service: ${{ secrets.ECS_SERVICE }}
+        cluster: ${{ secrets.ECS_CLUSTER }}
         wait-for-service-stability: false
