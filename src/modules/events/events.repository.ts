@@ -7,57 +7,73 @@ export class EventsRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createEvent(data: EventsDto) {
-    const { memberId, title, start, end, allDay, description } = data;
+    try {
+      const { memberId, title, start, end, allDay, description } = data;
 
-    const startEvent = new Date(start);
-    const endEvent = new Date(end);
+      const startEvent = new Date(start);
+      const endEvent = new Date(end);
 
-    return await this.prismaService.memberEvent.create({
-      data: {
-        memberId,
-        title,
-        start: startEvent,
-        end: endEvent,
-        allDay,
-        description,
-      },
-    });
+      return await this.prismaService.memberEvent.create({
+        data: {
+          memberId,
+          title,
+          start: startEvent,
+          end: endEvent,
+          allDay,
+          description,
+        },
+      });
+    } catch (error) {
+      throw new Error('Failed to create event');
+    }
   }
 
   async getEvents(memberId: number) {
-    return await this.prismaService.memberEvent.findMany({
-      where: {
-        memberId,
-      },
-    });
+    try {
+      return await this.prismaService.memberEvent.findMany({
+        where: {
+          memberId,
+        },
+      });
+    } catch (error) {
+      throw new Error('Failed to get events');
+    }
   }
 
   async deleteEvent(eventId: number) {
-    return await this.prismaService.memberEvent.delete({
-      where: {
-        id: eventId,
-      },
-    });
+    try {
+      return await this.prismaService.memberEvent.delete({
+        where: {
+          id: eventId,
+        },
+      });
+    } catch (error) {
+      throw new Error('Failed to delete event');
+    }
   }
 
   async updateEvent(eventId: number, data: EventsDto) {
-    const { memberId, title, start, end, allDay, description } = data;
+    try {
+      const { memberId, title, start, end, allDay, description } = data;
 
-    const startEvent = new Date(start);
-    const endEvent = new Date(end);
+      const startEvent = new Date(start);
+      const endEvent = new Date(end);
 
-    return await this.prismaService.memberEvent.update({
-      where: {
-        id: eventId,
-      },
-      data: {
-        memberId,
-        title,
-        start: startEvent,
-        end: endEvent,
-        allDay,
-        description,
-      },
-    });
+      return await this.prismaService.memberEvent.update({
+        where: {
+          id: eventId,
+        },
+        data: {
+          memberId,
+          title,
+          start: startEvent,
+          end: endEvent,
+          allDay,
+          description,
+        },
+      });
+    } catch (error) {
+      throw new Error('Failed to update event');
+    }
   }
 }
