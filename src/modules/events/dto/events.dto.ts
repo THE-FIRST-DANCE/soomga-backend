@@ -20,4 +20,7 @@ export class EventsDto {
 
   @IsString()
   description: string;
+
+  @IsNumber()
+  planId: number;
 }

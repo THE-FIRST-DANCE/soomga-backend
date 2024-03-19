@@ -8,7 +8,7 @@ export class EventsRepository {
 
   async createEvent(data: EventsDto) {
     try {
-      const { memberId, title, start, end, allDay, description } = data;
+      const { memberId, title, start, end, allDay, description, planId } = data;
 
       const startEvent = new Date(start);
       const endEvent = new Date(end);
@@ -21,6 +21,7 @@ export class EventsRepository {
           end: endEvent,
           allDay,
           description,
+          planId,
         },
       });
     } catch (error) {
@@ -33,6 +34,21 @@ export class EventsRepository {
       return await this.prismaService.memberEvent.findMany({
         where: {
           memberId,
+        },
+        include: {
+          plan: {
+            include: {
+              daySchedules: {
+                include: {
+                  schedules: {
+                    include: {
+                      item: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       });
     } catch (error) {
