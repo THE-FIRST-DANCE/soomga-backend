@@ -174,6 +174,7 @@ model Plan {
   updatedAt DateTime?   @updatedAt
   deletedAt DateTime?
 
+  memberEvents   MemberEvent[]
   daySchedules   DaySchedule[]
 
   authorId Int
@@ -242,6 +243,9 @@ model MemberEvent {
   end         DateTime
   allDay      Boolean? @default(false)
   description String?
+
+  planId      Int?
+  plan        Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   memberId    Int
   member      Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
