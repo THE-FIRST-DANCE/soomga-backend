@@ -30,6 +30,16 @@ export class PlansController {
     return await this.plansService.getPlanById(Number(planId));
   }
 
+  // 플랜 user id로 가져오기
+  @ApiOperation({
+    summary: '플랜 user id로 조회',
+    description: '플랜 user id로 플랜을 조회합니다.',
+  })
+  @Get('user/:userId')
+  async getPlanByUserId(@Param('userId') userId: number) {
+    return await this.plansService.getPlanByUserId(Number(userId));
+  }
+
   // 경로 계산
   @ApiOperation({
     summary: '경로 계산',

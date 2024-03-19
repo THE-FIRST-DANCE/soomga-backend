@@ -440,4 +440,28 @@ export class PlansRepository {
       throw new Error(`Failed to get plan by id: ${error.message}`);
     }
   }
+
+  // 플랜 user id로 가져오기
+  async getPlanByUserId(userId: number) {
+    try {
+      return await this.prismaService.plan.findMany({
+        where: {
+          authorId: userId,
+        },
+        include: {
+          daySchedules: {
+            include: {
+              schedules: {
+                include: {
+                  item: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to get plan by user id: ${error.message}`);
+    }
+  }
 }
