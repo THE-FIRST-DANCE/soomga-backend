@@ -28,7 +28,7 @@ model Member {
   boards       Board[]
   boardLikes   BoardLike[]
   plans        Plan[]
-  schedules    MemberSchedule[]
+  schedules    MemberEvent[]
   chatrooms    ChatroomParticipants[]
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
@@ -174,6 +174,7 @@ model Plan {
   updatedAt DateTime?   @updatedAt
   deletedAt DateTime?
 
+  memberEvents   MemberEvent[]
   daySchedules   DaySchedule[]
 
   authorId Int
@@ -202,8 +203,6 @@ model Schedule {
 
   dayScheduleId Int
   daySchedule DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade )
-
-  members MemberSchedule[]
 }
 
 model Place {
@@ -233,18 +232,23 @@ model OpeningHours {
   openTime  String
   closeTime String
 
-  placeId Int
-  place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  placeId   Int
+  place     Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
-model MemberSchedule {
-  id Int @id @default(autoincrement())
+model MemberEvent {
+  id          Int @id @default(autoincrement())
+  title       String
+  start       DateTime
+  end         DateTime
+  allDay      Boolean? @default(false)
+  description String?
 
-  memberId Int
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  planId      Int?
+  plan        Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  scheduleId Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  memberId    Int
+  member      Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model PlaceReview {

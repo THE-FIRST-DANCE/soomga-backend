@@ -17,9 +17,11 @@ import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { AdminModule } from '../admin/admin.module';
 import { HealthModule } from '../health/health.module';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
+    EventsModule,
     PlansModule,
     PlacesModule,
     AuthModule,

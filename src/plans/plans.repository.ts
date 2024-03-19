@@ -17,22 +17,26 @@ export class PlansRepository {
 
   // 플랜 가져오기
   async getPlan(authorId: number) {
-    return await this.prismaService.plan.findMany({
-      where: {
-        authorId: Number(authorId),
-      },
-      include: {
-        daySchedules: {
-          include: {
-            schedules: {
-              include: {
-                item: true,
+    try {
+      return await this.prismaService.plan.findMany({
+        where: {
+          authorId: Number(authorId),
+        },
+        include: {
+          daySchedules: {
+            include: {
+              schedules: {
+                include: {
+                  item: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      throw new Error(`Failed to get plans: ${error.message}`);
+    }
   }
 
   // 경로 계산
@@ -374,38 +378,90 @@ export class PlansRepository {
 
   // 스케줄 저장
   async saveSchedule(data: PlanAddDto) {
-    const plan = await this.prismaService.plan.create({
-      data: {
-        title: data.title,
-        region: data.region,
-        authorId: 1,
-        transport: data.transport,
-        period: data.period,
-      },
-    });
-
-    for (let i = 1; i < data.period + 1; i++) {
-      const daySchedule = await this.prismaService.daySchedule.create({
+    try {
+      const plan = await this.prismaService.plan.create({
         data: {
-          day: i,
-          planId: plan.id,
+          title: data.title,
+          region: data.region,
+          authorId: 1,
+          transport: data.transport,
+          period: data.period,
         },
       });
 
-      for (const place of data.list[i]) {
-        await this.prismaService.schedule.create({
+      for (let i = 1; i < data.period + 1; i++) {
+        const daySchedule = await this.prismaService.daySchedule.create({
           data: {
-            stayTime: place.stayTime,
-            nextLat: place.nextLat,
-            nextLng: place.nextLng,
-            nextPlaceId: place.nextPlaceId,
-            nextTime: place.nextTime,
-            nextPlaceName: place.nextPlaceName,
-            dayScheduleId: daySchedule.id,
-            placeId: place.item.id,
+            day: i,
+            planId: plan.id,
           },
         });
+
+        for (const place of data.list[i]) {
+          await this.prismaService.schedule.create({
+            data: {
+              stayTime: place.stayTime,
+              nextLat: place.nextLat,
+              nextLng: place.nextLng,
+              nextPlaceId: place.nextPlaceId,
+              nextTime: place.nextTime,
+              nextPlaceName: place.nextPlaceName,
+              dayScheduleId: daySchedule.id,
+              placeId: place.item.id,
+            },
+          });
+        }
       }
+    } catch (error) {
+      throw new Error(`Failed to save schedule: ${error.message}`);
+    }
+  }
+
+  // 플랜 id로 가져오기
+  async getPlanById(planId: number) {
+    try {
+      return await this.prismaService.plan.findUnique({
+        where: {
+          id: planId,
+        },
+        include: {
+          daySchedules: {
+            include: {
+              schedules: {
+                include: {
+                  item: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to get plan by id: ${error.message}`);
+    }
+  }
+
+  // 플랜 user id로 가져오기
+  async getPlanByUserId(userId: number) {
+    try {
+      return await this.prismaService.plan.findMany({
+        where: {
+          authorId: userId,
+        },
+        include: {
+          daySchedules: {
+            include: {
+              schedules: {
+                include: {
+                  item: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to get plan by user id: ${error.message}`);
     }
   }
 }
