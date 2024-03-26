@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ChatSerivce } from './chat.service';
+import { ChatService } from './chat.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ChatRepository } from './chat.repository';
 import { ChatController } from './chat.controller';
@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 @Module({
   imports: [PrismaModule, AuthModule],
   providers: [
-    ChatSerivce,
+    ChatService,
     ChatRepository,
     ChatGateway,
     AuthRepository,

@@ -8,7 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ChatSerivce } from './chat.service';
+import { ChatService } from './chat.service';
 import { Member } from '@prisma/client';
 import { User } from '../auth/auth.decorator';
 import { AuthAdminGuard, AuthMemberGuard } from '../auth/auth.guard';
@@ -21,7 +21,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 @ApiTags('채팅 API')
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatSerivce) {}
+  constructor(private readonly chatService: ChatService) {}
 
   @Get()
   @UseGuards(AuthMemberGuard)

@@ -6,7 +6,7 @@ import { Cache } from 'cache-manager';
 import { InviteMemberDto } from './dto/invite-member.dto';
 
 @Injectable()
-export class ChatSerivce {
+export class ChatService {
   constructor(
     private readonly chatRepository: ChatRepository,
     @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
