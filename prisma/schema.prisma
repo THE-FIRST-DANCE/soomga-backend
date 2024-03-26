@@ -263,7 +263,7 @@ model PlaceReview {
 }
 
 model Chatroom {
-  id        Int       @id @default(autoincrement())
+  id    String    @id @default(uuid())
   name      String
   createdAt DateTime? @default(now())
   deletedAt DateTime?
@@ -273,21 +273,21 @@ model Chatroom {
 }
 
 model ChatroomParticipants {
-  id Int @id @default(autoincrement())
-
-  chatroomId Int
+  chatroomId String
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id], onDelete: Cascade)
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([chatroomId, memberId])
 }
 
 model ChatroomMessage {
-  id        Int       @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   content   Json
   createdAt DateTime? @default(now())
 
-  chatroomId Int
+  chatroomId String
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
   memberId Int
