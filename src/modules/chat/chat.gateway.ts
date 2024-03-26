@@ -12,7 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthPayload } from '../../interfaces/auth.interface';
 import { Content, Message } from '../../interfaces/chat.interface';
 
-@WebSocketGateway(4000, { cors: true })
+@WebSocketGateway({ cors: true })
 export default class ChatGateway
   implements OnGatewayDisconnect, OnGatewayConnection
 {

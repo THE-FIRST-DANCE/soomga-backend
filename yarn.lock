@@ -1018,6 +1018,15 @@
   resolved "https://registry.yarnpkg.com/@socket.io/component-emitter/-/component-emitter-3.1.0.tgz#96116f2a912e0c02817345b3c10751069920d553"
   integrity sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==
 
+"@socket.io/redis-adapter@^8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@socket.io/redis-adapter/-/redis-adapter-8.3.0.tgz#bdce1e8f34c07df4a8baf98170bf24dc84eaed4a"
+  integrity sha512-ly0cra+48hDmChxmIpnESKrc94LjRL80TEmZVscuQ/WWkRP81nNj8W8cCGMqbI4L6NCuAaPRSzZF1a9GlAxxnA==
+  dependencies:
+    debug "~4.3.1"
+    notepack.io "~3.0.1"
+    uid2 "1.0.0"
+
 "@tsconfig/node10@^1.0.7":
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/@tsconfig/node10/-/node10-1.0.9.tgz#df4907fc07a886922637b15e02d4cebc4c0021b2"
@@ -4570,6 +4579,11 @@ normalize-path@^3.0.0, normalize-path@~3.0.0:
   resolved "https://registry.yarnpkg.com/normalize-path/-/normalize-path-3.0.0.tgz#0dcd69ff23a1c9b11fd0978316644a0388216a65"
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
 
+notepack.io@~3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/notepack.io/-/notepack.io-3.0.1.tgz#2c2c9de1bd4e64a79d34e33c413081302a0d4019"
+  integrity sha512-TKC/8zH5pXIAMVQio2TvVDTtPRX+DJPHDqjRbxogtFiByHyzKmy96RA0JtCQJ+WouyyL4A10xomQzgbUT+1jCg==
+
 npm-run-path@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/npm-run-path/-/npm-run-path-4.0.1.tgz#b7ecd1e5ed53da8e37a55e1c2269e0b97ed748ea"
@@ -5032,7 +5046,7 @@ rechoir@^0.6.2:
   dependencies:
     resolve "^1.1.6"
 
-redis@^4.6.7:
+redis@^4.6.13, redis@^4.6.7:
   version "4.6.13"
   resolved "https://registry.yarnpkg.com/redis/-/redis-4.6.13.tgz#e247267c5f3ba35ab8277b57343d3a56acb2f0a6"
   integrity sha512-MHgkS4B+sPjCXpf+HfdetBwbRz6vCtsceTmw1pHNYJAsYxrfpOP6dz+piJWGos8wqG7qb3vj/Rrc5qOlmInUuA==
@@ -5791,6 +5805,11 @@ uid2@0.0.x:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/uid2/-/uid2-0.0.4.tgz#033f3b1d5d32505f5ce5f888b9f3b667123c0a44"
   integrity sha512-IevTus0SbGwQzYh3+fRsAMTVVPOoIVufzacXcHPmdlle1jUpq7BRL+mw3dgeLanvGZdwwbWhRV6XrcFNdBmjWA==
+
+uid2@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/uid2/-/uid2-1.0.0.tgz#ef8d95a128d7c5c44defa1a3d052eecc17a06bfb"
+  integrity sha512-+I6aJUv63YAcY9n4mQreLUt0d4lvwkkopDNmpomkAUz0fAkEMV9pRWxN0EjhW1YfRhcuyHg2v3mwddCDW1+LFQ==
 
 uid@2.0.2:
   version "2.0.2"
