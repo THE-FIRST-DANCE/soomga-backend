@@ -18,6 +18,7 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { AdminModule } from '../admin/admin.module';
 import { HealthModule } from '../health/health.module';
 import { EventsModule } from '../events/events.module';
+import { ChatModule } from '../chat/chat.module';
 import { CacheConfig, RedisConfig } from '../../configs/config.interface';
 
 @Module({
@@ -32,6 +33,7 @@ import { CacheConfig, RedisConfig } from '../../configs/config.interface';
     LoggerModule,
     CoolsmsModule,
     HealthModule,
+    ChatModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
