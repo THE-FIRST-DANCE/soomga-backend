@@ -30,10 +30,10 @@ export async function memberSeed(client: TransactionClient) {
   const memberData = await hashMembersPassword(fakerMembers);
 
   await Promise.all(
-    memberData.map((member) => {
-      return client.member.create({
+    memberData.map((member) =>
+      client.member.create({
         data: member,
-      });
-    }),
+      }),
+    ),
   );
 }

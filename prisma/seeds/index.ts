@@ -5,6 +5,7 @@ import { languageSeed } from './language.seed';
 import { areaSeed } from './area.seed';
 import { guideSeed } from './guide.seed';
 import { defaultMemberSeed } from './default-member.seed';
+import { tagSeed } from './tag.seed';
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,7 @@ async function main() {
     await languageSeed(prisma);
     await memberSeed(prisma);
     await guideSeed(prisma);
+    await tagSeed(prisma);
   });
 }
 main()

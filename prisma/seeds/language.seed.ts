@@ -64,10 +64,10 @@ const languageDatas: Prisma.LanguageCreateInput[] = [
 
 export async function languageSeed(client: TransactionClient) {
   await Promise.all(
-    languageDatas.map((language) => {
-      return client.language.create({
+    languageDatas.map((language) =>
+      client.language.create({
         data: language,
-      });
-    }),
+      }),
+    ),
   );
 }
