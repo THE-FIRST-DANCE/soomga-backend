@@ -2,11 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app/app.module';
 import { swaggerSetup } from './swagger';
 import { ConfigService } from '@nestjs/config';
-import { BaseConfig, CorsConfig, NestConfig } from './configs/config.interface';
+import {
+  BaseConfig,
+  CorsConfig,
+  NestConfig,
+  RedisConfig,
+} from './configs/config.interface';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
-import { IoAdapter } from '@nestjs/platform-socket.io';
+import { RedisIoAdapter } from './modules/redis/redis.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,10 +22,11 @@ async function bootstrap() {
   const nest = config.get<NestConfig>('nest');
   const cors = config.get<CorsConfig>('cors');
   const base = config.get<BaseConfig>('base');
+  const redis = config.get<RedisConfig>('redis');
 
   if (cors.enabled) {
     app.enableCors({
-      origin: base.frontendUrl,
+      origin: base.frontendUrl.split(','),
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       allowedHeaders: 'Content-Type, Accept, Authorization',
       credentials: true,
@@ -35,7 +41,10 @@ async function bootstrap() {
       saveUninitialized: false,
     }),
   );
-  app.useWebSocketAdapter(new IoAdapter(app));
+
+  const redisIoAdapter = new RedisIoAdapter(app, redis.host, redis.port);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.useGlobalPipes(new ValidationPipe());
 
