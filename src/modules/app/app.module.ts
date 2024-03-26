@@ -11,7 +11,7 @@ import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
 import { PlacesModule } from '../places/places.module';
-import { PlansModule } from 'src/plans/plans.module';
+import { PlansModule } from '../plans/plans.module';
 
 import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
