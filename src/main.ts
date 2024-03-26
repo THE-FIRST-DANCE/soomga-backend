@@ -6,6 +6,7 @@ import { BaseConfig, CorsConfig, NestConfig } from './configs/config.interface';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -21,7 +22,7 @@ async function bootstrap() {
     app.enableCors({
       origin: base.frontendUrl,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      allowedHeaders: 'Content-Type, Accept',
+      allowedHeaders: 'Content-Type, Accept, Authorization',
       credentials: true,
     });
   }
@@ -34,6 +35,7 @@ async function bootstrap() {
       saveUninitialized: false,
     }),
   );
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   app.useGlobalPipes(new ValidationPipe());
 

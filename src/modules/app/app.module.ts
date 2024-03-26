@@ -18,6 +18,8 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { AdminModule } from '../admin/admin.module';
 import { HealthModule } from '../health/health.module';
 import { EventsModule } from '../events/events.module';
+import { ChatModule } from '../chat/chat.module';
+import { CacheConfig, RedisConfig } from '../../configs/config.interface';
 
 @Module({
   imports: [
@@ -31,27 +33,30 @@ import { EventsModule } from '../events/events.module';
     LoggerModule,
     CoolsmsModule,
     HealthModule,
+    ChatModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
         configService: ConfigService,
       ): Promise<CacheModuleOptions> => {
-        // try {
-        //   const redis = await redisStore({
-        //     ttl: 30_000,
-        //     socket: {
-        //       host: configService.get('REDIS_HOST'),
-        //       port: configService.get('REDIS_PORT'),
-        //     },
-        //   });
-        //   return { store: redis };
-        // } catch (error) {
-        //   console.error(
-        //     'Failed to connect to Redis, using in-memory cache instead.',
-        //     error,
-        //   );
-        return { store: 'memory', ttl: 30_000 };
-        // }
+        const redisConfig = configService.get<RedisConfig>('redis');
+        const cacheConfig = configService.get<CacheConfig>('cache');
+        try {
+          const redis = await redisStore({
+            ttl: cacheConfig.ttl,
+            socket: {
+              host: redisConfig.host,
+              port: redisConfig.port,
+            },
+          });
+          return { store: redis };
+        } catch (error) {
+          console.error(
+            'Failed to connect to Redis, using in-memory cache instead.',
+            error,
+          );
+          return { store: 'memory', ttl: cacheConfig.ttl };
+        }
       },
       inject: [ConfigService],
     }),
