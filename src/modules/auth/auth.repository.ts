@@ -2,12 +2,18 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { AuthCodePayload } from '../../interfaces/auth.interface';
 
-const AUTH_CODE_ATTEMPT_EXPIRATION = 1_000 * 60 * 60 * 24; // 24 hours
-const AUTH_CODE_EXPIRATION = 1_000 * 60 * 5; // 5 mins
+import { ConfigService } from '@nestjs/config';
+import { SecurityConfig } from 'src/configs/config.interface';
 
 @Injectable()
 export class AuthRepository {
-  constructor(@Inject('CACHE_MANAGER') private readonly cacheManager: Cache) {}
+  securityConfig: SecurityConfig;
+  constructor(
+    @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
+    private readonly configService: ConfigService,
+  ) {
+    this.securityConfig = this.configService.get<SecurityConfig>('security');
+  }
 
   async getAuthCode(phoneNumber: string) {
     const authCodeKey = `authCode:${phoneNumber}`;
@@ -18,7 +24,11 @@ export class AuthRepository {
   async cacheAuthCode(cachePayload: AuthCodePayload) {
     const { phoneNumber } = cachePayload;
     const authCodeKey = `authCode:${phoneNumber}`;
-    this.cacheManager.set(authCodeKey, cachePayload, AUTH_CODE_EXPIRATION);
+    this.cacheManager.set(
+      authCodeKey,
+      cachePayload,
+      this.securityConfig.authCodeExpiration,
+    );
   }
 
   async resetAuthCode(phoneNumber: string) {
@@ -39,7 +49,7 @@ export class AuthRepository {
     this.cacheManager.set(
       attemptsKey,
       currentValue + 1,
-      AUTH_CODE_ATTEMPT_EXPIRATION,
+      this.securityConfig.authCodeAttemptExpiration,
     );
   }
 
@@ -61,7 +71,7 @@ export class AuthRepository {
     this.cacheManager.set(
       attemptsKey,
       currentValue + 1,
-      AUTH_CODE_ATTEMPT_EXPIRATION,
+      this.securityConfig.authCodeAttemptExpiration,
     );
   }
 

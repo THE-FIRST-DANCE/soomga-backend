@@ -34,6 +34,8 @@ export interface SecurityConfig {
   accessTokenExpiresIn: number;
   refreshTokenExpiresIn: number;
   bcryptSaltOrRound: string | number;
+  authCodeExpiration: number;
+  authCodeAttemptExpiration: number;
 }
 
 export interface BaseConfig {
