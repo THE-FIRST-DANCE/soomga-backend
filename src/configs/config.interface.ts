@@ -5,6 +5,7 @@ export interface Config {
   redis: RedisConfig;
   security: SecurityConfig;
   base: BaseConfig;
+  cache: CacheConfig;
 }
 
 export interface NestConfig {
@@ -38,4 +39,12 @@ export interface SecurityConfig {
 export interface BaseConfig {
   frontendUrl: string;
   backendUrl: string;
+}
+
+export interface CacheConfig {
+  ttl: number;
+  chat: {
+    ttl: number;
+    maxNumOfMsgs: number;
+  };
 }

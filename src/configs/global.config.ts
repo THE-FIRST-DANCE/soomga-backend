@@ -29,4 +29,11 @@ export const GLOBAL_CONFIG: Config = {
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
     backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
   },
+  cache: {
+    ttl: +process.env.CACHE_TTL || 30_000,
+    chat: {
+      ttl: +process.env.CACHE_CHAT_TTL || 1000 * 60 * 60 * 24,
+      maxNumOfMsgs: +process.env.CACHE_CHAT_MAX_NUM_OF_MSGS || 100,
+    },
+  },
 };
