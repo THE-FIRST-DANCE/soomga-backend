@@ -10,16 +10,25 @@ import { OAuthSignUpDto } from './dto/oauth-sign-up.dto';
 import { Member } from '@prisma/client';
 import { CoolsmsService } from '../coolsms/coolsms.service';
 import { AuthRepository } from './auth.repository';
+import { ConfigService } from '@nestjs/config';
 
 const AUTH_CODE_MAX_ATTEMPTS = 5;
 @Injectable()
 export class AuthService {
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
+
   constructor(
+    private readonly configService: ConfigService,
     private readonly membersService: MembersService,
     private readonly jwtService: JwtService,
     private readonly authRepository: AuthRepository,
     private readonly coolsmsService: CoolsmsService,
-  ) {}
+  ) {
+    const securityConfig = this.configService.get('security');
+    this.accessTokenExpiresIn = securityConfig.accessTokenExpiresIn;
+    this.refreshTokenExpiresIn = securityConfig.refreshTokenExpiresIn;
+  }
 
   async signIn(signInDto: SignInDto) {
     const member = await this.membersService.findMemberByEmail(signInDto.email);
@@ -34,7 +43,8 @@ export class AuthService {
 
   async signUp(signUpDto: SignUpDto) {
     await this.membersService.checkValidEmail(signUpDto.email);
-    const member = await this.membersService.create(signUpDto);
+    const { passwordConfirm, ...rest } = signUpDto;
+    const member = await this.membersService.create(rest);
     return this.generateTokens(member);
   }
 
@@ -96,6 +106,18 @@ export class AuthService {
     await this.authRepository.resetAuthCodeValidateAttempts(id);
   }
 
+  async restoreAccessToken(member: Member) {
+    const payload = {
+      sub: member.id,
+      email: member.email,
+      nickname: member.nickname,
+      role: member.role,
+      avatar: member.avatar,
+    };
+
+    return this.jwtService.sign(payload);
+  }
+
   private generateTokens(member: Member) {
     const payload = {
       sub: member.id,
@@ -104,8 +126,12 @@ export class AuthService {
       role: member.role,
       avatar: member.avatar,
     };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.accessTokenExpiresIn,
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: this.refreshTokenExpiresIn,
+    });
     return { user: payload, accessToken, refreshToken };
   }
 }

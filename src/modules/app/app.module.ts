@@ -11,29 +11,46 @@ import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
 import { PlacesModule } from '../places/places.module';
+import { PlansModule } from '../plans/plans.module';
 
 import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
+import { AdminModule } from '../admin/admin.module';
+import { HealthModule } from '../health/health.module';
+import { EventsModule } from '../events/events.module';
+import { ChatModule } from '../chat/chat.module';
+import { CacheConfig, RedisConfig } from '../../configs/config.interface';
+import { BoardsModule } from '../boards/boards.module';
+import { TagsModule } from '../tags/tags.module';
 
 @Module({
   imports: [
+    EventsModule,
+    PlansModule,
     PlacesModule,
     AuthModule,
+    AdminModule,
+    BoardsModule,
+    TagsModule,
     GuidesModule,
     MembersModule,
     LoggerModule,
     CoolsmsModule,
+    HealthModule,
+    ChatModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
         configService: ConfigService,
       ): Promise<CacheModuleOptions> => {
+        const redisConfig = configService.get<RedisConfig>('redis');
+        const cacheConfig = configService.get<CacheConfig>('cache');
         try {
           const redis = await redisStore({
-            ttl: 30_000,
+            ttl: cacheConfig.ttl,
             socket: {
-              host: configService.get('REDIS_HOST'),
-              port: configService.get('REDIS_PORT'),
+              host: redisConfig.host,
+              port: redisConfig.port,
             },
           });
           return { store: redis };
@@ -42,7 +59,7 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
             'Failed to connect to Redis, using in-memory cache instead.',
             error,
           );
-          return { store: 'memory', ttl: 30_000 };
+          return { store: 'memory', ttl: cacheConfig.ttl };
         }
       },
       inject: [ConfigService],

@@ -28,7 +28,7 @@ model Member {
   boards       Board[]
   boardLikes   BoardLike[]
   plans        Plan[]
-  schedules    MemberSchedule[]
+  schedules    MemberEvent[]
   chatrooms    ChatroomParticipants[]
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
@@ -37,8 +37,8 @@ model Member {
 }
 
 model GuideProfile {
-  id                  Int         @id @default(autoincrement())
-  temperatrue         Float?      @default(36.5)
+  id                  Int         @id
+  temperature         Float?      @default(36.5)
   service             String?
   areas               GuideArea[]
   phoneNumber         String?     @unique
@@ -46,8 +46,7 @@ model GuideProfile {
   verifiedID          Boolean?    @default(false)
   verifiedBankAccount Boolean?    @default(false)
 
-  memberId               Int                          @unique
-  member                 Member                       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member                 Member                       @relation(fields: [id], references: [id], onDelete: Cascade)
   languageCertifications GuideLanguageCertification[]
   reviews                GuideReview[]
 }
@@ -74,7 +73,7 @@ model Board {
   content   String?
   address   String?
   type      BoardType?   @default(TRIP)
-  status    AcessStatus? @default(PUBLIC)
+  status    AccessStatus? @default(PUBLIC)
   createdAt DateTime?    @default(now())
   updatedAt DateTime?    @updatedAt
   deletedAt DateTime?
@@ -87,7 +86,6 @@ model Board {
 }
 
 model BoardLike {
-  id        Int       @id @default(autoincrement())
   createdAt DateTime? @default(now())
 
   boardId Int
@@ -108,8 +106,6 @@ model Tag {
 }
 
 model MemberTag {
-  id Int @id @default(autoincrement())
-
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
@@ -120,8 +116,6 @@ model MemberTag {
 }
 
 model BoardTag {
-  id Int @id @default(autoincrement())
-
   boardId Int
   board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
@@ -140,8 +134,6 @@ model Language {
 }
 
 model MemberLanguage {
-  id Int @id @default(autoincrement())
-
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
@@ -162,8 +154,6 @@ model LanguageCertification {
 }
 
 model GuideLanguageCertification {
-  id Int @id @default(autoincrement())
-
   guideId Int
   guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
 
@@ -176,51 +166,43 @@ model GuideLanguageCertification {
 model Plan {
   id        Int         @id @default(autoincrement())
   title     String
-  content   String
-  status    AcessStatus @default(PUBLIC)
+  status    AccessStatus @default(PUBLIC)
+  region    String
+  transport String
+  period    Int
   createdAt DateTime?   @default(now())
   updatedAt DateTime?   @updatedAt
   deletedAt DateTime?
 
-  authorId Int?
-  author   Member? @relation(fields: [authorId], references: [id])
+  memberEvents   MemberEvent[]
+  daySchedules   DaySchedule[]
 
-  schedules PlanSchedule[]
+  authorId Int
+  author   Member @relation(fields: [authorId], references: [id])
 }
 
-model PlanSchedule {
-  id       Int @id @default(autoincrement())
-  sequence Int
+model DaySchedule {
+  id        Int       @id @default(autoincrement())
+  day       Int
+  schedules Schedule[]
 
-  planId Int
-  plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
-
-  scheduleId Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  planId    Int      
+  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Schedule {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  startTime   DateTime
-  endTime     DateTime
+  id            Int      @id @default(autoincrement())
+  placeId       Int
+  item          Place    @relation(fields: [placeId], references: [id])
+  nextLat       Float?
+  nextLng       Float?
+  nextPlaceId   Int?
+  nextPlaceName String?
+  nextTime      String?
+  stayTime      String?
 
-  placeId Int?
-  place   Place? @relation(fields: [placeId], references: [id])
-
-  plans   PlanSchedule[]
-  members MemberSchedule[]
-}
-
-model MemberSchedule {
-  id Int @id @default(autoincrement())
-
-  memberId Int
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  scheduleId Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  dayScheduleId Int
+  daySchedule DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade )
 }
 
 model Place {
@@ -239,8 +221,8 @@ model Place {
   detailAddress String?
   phone         String?
 
-  openingHours OpeningHours[]
   schedules    Schedule[]
+  openingHours OpeningHours[]
   PlaceReview  PlaceReview[]
 }
 
@@ -250,8 +232,23 @@ model OpeningHours {
   openTime  String
   closeTime String
 
-  placeId Int
-  place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  placeId   Int
+  place     Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+}
+
+model MemberEvent {
+  id          Int @id @default(autoincrement())
+  title       String
+  start       DateTime
+  end         DateTime
+  allDay      Boolean? @default(false)
+  description String?
+
+  planId      Int?
+  plan        Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  memberId    Int
+  member      Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model PlaceReview {
@@ -266,7 +263,7 @@ model PlaceReview {
 }
 
 model Chatroom {
-  id        Int       @id @default(autoincrement())
+  id    String    @id @default(uuid())
   name      String
   createdAt DateTime? @default(now())
   deletedAt DateTime?
@@ -276,21 +273,21 @@ model Chatroom {
 }
 
 model ChatroomParticipants {
-  id Int @id @default(autoincrement())
-
-  chatroomId Int
+  chatroomId String
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id], onDelete: Cascade)
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([chatroomId, memberId])
 }
 
 model ChatroomMessage {
-  id        Int       @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   content   Json
   createdAt DateTime? @default(now())
 
-  chatroomId Int
+  chatroomId String
   chatroom   Chatroom @relation(fields: [chatroomId], references: [id])
 
   memberId Int
@@ -337,7 +334,7 @@ enum MemberStatus {
   DELETED
 }
 
-enum AcessStatus {
+enum AccessStatus {
   PUBLIC
   PRIVATE
   DELETED

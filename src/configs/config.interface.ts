@@ -4,6 +4,8 @@ export interface Config {
   swagger: SwaggerConfig;
   redis: RedisConfig;
   security: SecurityConfig;
+  base: BaseConfig;
+  cache: CacheConfig;
 }
 
 export interface NestConfig {
@@ -32,4 +34,19 @@ export interface SecurityConfig {
   accessTokenExpiresIn: number;
   refreshTokenExpiresIn: number;
   bcryptSaltOrRound: string | number;
+  authCodeExpiration: number;
+  authCodeAttemptExpiration: number;
+}
+
+export interface BaseConfig {
+  frontendUrl: string;
+  backendUrl: string;
+}
+
+export interface CacheConfig {
+  ttl: number;
+  chat: {
+    ttl: number;
+    maxNumOfMsgs: number;
+  };
 }

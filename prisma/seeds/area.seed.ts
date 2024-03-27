@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { TransactionClient } from './common.interface';
 
-const areas = [
+export const areas: Prisma.AreaCreateInput[] = [
   '서울',
   '인천',
   '부산',
@@ -19,9 +20,12 @@ const areas = [
   '제주',
 ].map((name) => ({ name }));
 
-export async function areaSeed(client: PrismaClient) {
-  await client.area.createMany({
-    data: areas,
-    skipDuplicates: true,
-  });
+export async function areaSeed(client: TransactionClient) {
+  await Promise.all(
+    areas.map(async (area) => {
+      return client.area.create({
+        data: area,
+      });
+    }),
+  );
 }
