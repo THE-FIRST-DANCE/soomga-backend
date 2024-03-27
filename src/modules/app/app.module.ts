@@ -20,6 +20,8 @@ import { HealthModule } from '../health/health.module';
 import { EventsModule } from '../events/events.module';
 import { ChatModule } from '../chat/chat.module';
 import { CacheConfig, RedisConfig } from '../../configs/config.interface';
+import { BoardsModule } from '../boards/boards.module';
+import { TagsModule } from '../tags/tags.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { CacheConfig, RedisConfig } from '../../configs/config.interface';
     PlacesModule,
     AuthModule,
     AdminModule,
+    BoardsModule,
+    TagsModule,
     GuidesModule,
     MembersModule,
     LoggerModule,
