@@ -7,6 +7,7 @@ import {
   CorsConfig,
   NestConfig,
   RedisConfig,
+  SecurityConfig,
 } from './configs/config.interface';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
@@ -20,6 +21,7 @@ async function bootstrap() {
 
   const config = app.get<ConfigService>(ConfigService);
   const nest = config.get<NestConfig>('nest');
+  const security = config.get<SecurityConfig>('security');
   const cors = config.get<CorsConfig>('cors');
   const base = config.get<BaseConfig>('base');
   const redis = config.get<RedisConfig>('redis');
@@ -36,7 +38,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(
     session({
-      secret: 'my-secret',
+      secret: security.sessionSecret,
       resave: false,
       saveUninitialized: false,
     }),

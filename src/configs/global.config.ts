@@ -26,10 +26,15 @@ export const GLOBAL_CONFIG: Config = {
     bcryptSaltOrRound: 10,
     authCodeExpiration: 1000 * 60 * 5, // 5 mins,
     authCodeAttemptExpiration: 1000 * 60 * 60 * 24, // 24 hours
+    authCodeMaxAttempts: 5,
+    jwtSecret: process.env.JWT_SECRET,
+    sessionSecret: process.env.SESSION_SECRET,
   },
   base: {
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
     backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
+    loadBalancerUrl:
+      process.env.FRONTEND_URL.split(',').shift() || 'http://localhost:3000',
   },
   cache: {
     ttl: +process.env.CACHE_TTL || 30_000,
@@ -37,5 +42,11 @@ export const GLOBAL_CONFIG: Config = {
       ttl: +process.env.CACHE_CHAT_TTL || 1000 * 60 * 60 * 24,
       maxNumOfMsgs: +process.env.CACHE_CHAT_MAX_NUM_OF_MSGS || 100,
     },
+  },
+  aws: {
+    region: process.env.AWS_REGION,
+    s3Bucket: process.env.AWS_S3_BUCKET,
+    s3AccessKey: process.env.AWS_S3_ACCESS_KEY,
+    s3SecretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
   },
 };

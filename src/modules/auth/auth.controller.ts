@@ -134,7 +134,7 @@ export class AuthController {
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.redirect(`${this.base.frontendUrl}/redirect`);
+    return res.redirect(`${this.base.loadBalancerUrl}/redirect`);
   }
 
   @Get('line/callback')
@@ -148,7 +148,7 @@ export class AuthController {
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.redirect(`${this.base.frontendUrl}/redirect`);
+    return res.redirect(`${this.base.loadBalancerUrl}/redirect`);
   }
 
   @UseGuards(AuthJwtRefreshGuard)
