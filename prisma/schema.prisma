@@ -67,19 +67,21 @@ model GuideReview {
 }
 
 model Board {
-  id        Int          @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
+  url       String?        @unique @default(cuid())
   title     String
   overview  String?
   content   String?
   address   String?
-  type      BoardType?   @default(TRIP)
+  type      BoardType?    @default(TRIP)
   status    AccessStatus? @default(PUBLIC)
-  createdAt DateTime?    @default(now())
-  updatedAt DateTime?    @updatedAt
+  createdAt DateTime?     @default(now())
+  updatedAt DateTime?     @updatedAt
   deletedAt DateTime?
 
   tags  BoardTag[]
   likes BoardLike[]
+  files BoardFile[]
 
   authorId Int?
   author   Member? @relation(fields: [authorId], references: [id])
@@ -164,36 +166,36 @@ model GuideLanguageCertification {
 }
 
 model Plan {
-  id        Int         @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   title     String
   status    AccessStatus @default(PUBLIC)
   region    String
   transport String
   period    Int
-  createdAt DateTime?   @default(now())
-  updatedAt DateTime?   @updatedAt
+  createdAt DateTime?    @default(now())
+  updatedAt DateTime?    @updatedAt
   deletedAt DateTime?
 
-  memberEvents   MemberEvent[]
-  daySchedules   DaySchedule[]
+  memberEvents MemberEvent[]
+  daySchedules DaySchedule[]
 
   authorId Int
   author   Member @relation(fields: [authorId], references: [id])
 }
 
 model DaySchedule {
-  id        Int       @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   day       Int
   schedules Schedule[]
 
-  planId    Int      
-  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Schedule {
-  id            Int      @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   placeId       Int
-  item          Place    @relation(fields: [placeId], references: [id])
+  item          Place   @relation(fields: [placeId], references: [id])
   nextLat       Float?
   nextLng       Float?
   nextPlaceId   Int?
@@ -202,7 +204,7 @@ model Schedule {
   stayTime      String?
 
   dayScheduleId Int
-  daySchedule DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade )
+  daySchedule   DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade)
 }
 
 model Place {
@@ -232,23 +234,23 @@ model OpeningHours {
   openTime  String
   closeTime String
 
-  placeId   Int
-  place     Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  placeId Int
+  place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
 model MemberEvent {
-  id          Int @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   start       DateTime
   end         DateTime
   allDay      Boolean? @default(false)
   description String?
 
-  planId      Int?
-  plan        Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId Int?
+  plan   Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  memberId    Int
-  member      Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model PlaceReview {
@@ -263,7 +265,7 @@ model PlaceReview {
 }
 
 model Chatroom {
-  id    String    @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String
   createdAt DateTime? @default(now())
   deletedAt DateTime?
@@ -283,7 +285,7 @@ model ChatroomParticipants {
 }
 
 model ChatroomMessage {
-  id       Int    @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   Json
   createdAt DateTime? @default(now())
 
@@ -309,6 +311,25 @@ model GuideArea {
 
   areaId Int
   area   Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+}
+
+model File {
+  id        String    @id @default(uuid())
+  url       String    @unique
+  name      String?
+  createdAt DateTime? @default(now())
+
+  boards BoardFile[]
+}
+
+model BoardFile {
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  fileId String
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, fileId])
 }
 
 enum Provider {
