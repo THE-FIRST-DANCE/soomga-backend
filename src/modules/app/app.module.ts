@@ -23,10 +23,12 @@ import { PlansModule } from '../plans/plans.module';
 
 import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
+import { UploadsModule } from '../uploads/uploads.module';
 import { envValidateSchema } from 'src/configs/env-validate.schema';
 
 @Module({
   imports: [
+    UploadsModule,
     EventsModule,
     PlansModule,
     PlacesModule,
