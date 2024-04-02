@@ -11,7 +11,7 @@ export class LineStrategy extends PassportStrategy(Strategy, 'line') {
     super({
       channelID: configService.get<string>('LINE_CHANNEL_ID'),
       channelSecret: configService.get<string>('LINE_CHANNEL_SECRET'),
-      callbackURL: '/auth/line/callback',
+      callbackURL: '/api/auth/line/callback',
     });
   }
 
