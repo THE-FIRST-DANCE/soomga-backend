@@ -6,6 +6,7 @@ export interface Config {
   security: SecurityConfig;
   base: BaseConfig;
   cache: CacheConfig;
+  aws: AwsConfig;
 }
 
 export interface NestConfig {
@@ -36,11 +37,15 @@ export interface SecurityConfig {
   bcryptSaltOrRound: string | number;
   authCodeExpiration: number;
   authCodeAttemptExpiration: number;
+  authCodeMaxAttempts: number;
+  jwtSecret: string;
+  sessionSecret: string;
 }
 
 export interface BaseConfig {
   frontendUrl: string;
   backendUrl: string;
+  loadBalancerUrl: string;
 }
 
 export interface CacheConfig {
@@ -49,4 +54,11 @@ export interface CacheConfig {
     ttl: number;
     maxNumOfMsgs: number;
   };
+}
+
+export interface AwsConfig {
+  region: string;
+  s3Bucket: string;
+  s3AccessKey: string;
+  s3SecretAccessKey: string;
 }

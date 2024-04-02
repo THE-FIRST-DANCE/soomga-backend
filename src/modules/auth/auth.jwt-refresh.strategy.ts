@@ -11,7 +11,7 @@ import { MembersService } from '../members/members.service';
 import ErrorMessage from 'src/shared/constants/error-messages.constants';
 import { ConfigService } from '@nestjs/config';
 import { MemberStatus } from '@prisma/client';
-import { JwtService } from '@nestjs/jwt';
+import { SecurityConfig } from 'src/configs/config.interface';
 
 const cookieExtractor = (req: Request) => {
   return req.cookies.refreshToken;
@@ -21,8 +21,7 @@ const cookieExtractor = (req: Request) => {
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
   constructor(
     private readonly membersService: MembersService,
-    private readonly configService: ConfigService,
-    private readonly jwtService: JwtService,
+    readonly configService: ConfigService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -30,8 +29,8 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'refresh') {
         ExtractJwt.fromUrlQueryParameter('token'),
         cookieExtractor,
       ]),
-      ignoreExpiration: process.env.NODE_ENV !== 'production',
-      secretOrKey: configService.get<string>('JWT_SECRET'),
+      ignoreExpiration: configService.get('NODE_ENV') !== 'production',
+      secretOrKey: configService.get<SecurityConfig>('security').jwtSecret,
     });
   }
 
