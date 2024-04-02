@@ -18,6 +18,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'debug', 'log'],
   });
+  app.setGlobalPrefix('api'); // 모든 라우트에 /api를 기본 경로로 설정
 
   const config = app.get<ConfigService>(ConfigService);
   const nest = config.get<NestConfig>('nest');
