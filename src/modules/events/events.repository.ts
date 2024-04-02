@@ -10,6 +10,8 @@ export class EventsRepository {
     try {
       const { memberId, title, start, end, allDay, description, planId } = data;
 
+      console.log(data);
+
       const startEvent = new Date(start);
       const endEvent = new Date(end);
 
