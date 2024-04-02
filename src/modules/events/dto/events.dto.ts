@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class EventsDto {
   @IsNumber()
@@ -19,8 +19,10 @@ export class EventsDto {
   allDay: boolean;
 
   @IsString()
+  @IsOptional()
   description: string;
 
   @IsNumber()
+  @IsOptional()
   planId: number;
 }

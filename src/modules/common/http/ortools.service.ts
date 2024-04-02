@@ -6,7 +6,7 @@ import { OrtoolsPostData } from 'src/interfaces/ortools.interface';
 export class OrtoolsService {
   async getRoute(data: OrtoolsPostData[]) {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/distance', data);
+      const response = await axios.post('http://127.0.0.1:5001/distance', data);
 
       // 결과를 저장할 배열
       const result = [];
