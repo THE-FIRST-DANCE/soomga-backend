@@ -11,10 +11,7 @@ import { LoggerMiddleware } from 'src/middlewares/logger.middleware';
 import { LoggerModule } from '../logger/logger.module';
 import { MembersModule } from '../members/members.module';
 import { PlacesModule } from '../places/places.module';
-import { PlansModule } from '../plans/plans.module';
 
-import { GLOBAL_CONFIG } from '../../configs/global.config';
-import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { AdminModule } from '../admin/admin.module';
 import { HealthModule } from '../health/health.module';
 import { EventsModule } from '../events/events.module';
@@ -22,9 +19,16 @@ import { ChatModule } from '../chat/chat.module';
 import { CacheConfig, RedisConfig } from '../../configs/config.interface';
 import { BoardsModule } from '../boards/boards.module';
 import { TagsModule } from '../tags/tags.module';
+import { PlansModule } from '../plans/plans.module';
+
+import { GLOBAL_CONFIG } from '../../configs/global.config';
+import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
+import { UploadsModule } from '../uploads/uploads.module';
+import { envValidateSchema } from 'src/configs/env-validate.schema';
 
 @Module({
   imports: [
+    UploadsModule,
     EventsModule,
     PlansModule,
     PlacesModule,
@@ -64,7 +68,10 @@ import { TagsModule } from '../tags/tags.module';
       },
       inject: [ConfigService],
     }),
-    ConfigModule.forRoot({ isGlobal: true, load: [() => GLOBAL_CONFIG] }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [() => envValidateSchema.validateAsync(GLOBAL_CONFIG)],
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

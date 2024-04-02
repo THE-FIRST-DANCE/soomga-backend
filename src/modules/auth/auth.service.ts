@@ -17,6 +17,7 @@ const AUTH_CODE_MAX_ATTEMPTS = 5;
 export class AuthService {
   accessTokenExpiresIn: number;
   refreshTokenExpiresIn: number;
+  authCodeMaxAttempts: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -28,6 +29,7 @@ export class AuthService {
     const securityConfig = this.configService.get('security');
     this.accessTokenExpiresIn = securityConfig.accessTokenExpiresIn;
     this.refreshTokenExpiresIn = securityConfig.refreshTokenExpiresIn;
+    this.authCodeMaxAttempts = securityConfig.authCodeMaxAttempts;
   }
 
   async signIn(signInDto: SignInDto) {
