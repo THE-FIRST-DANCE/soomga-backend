@@ -7,6 +7,7 @@ import { SOSRepository } from './sos/sos.repository';
 import { TripsService } from './trips/trips.service';
 import { TripsRepository } from './trips/trips.repository';
 import { TagsRepository } from '../tags/tags.repository';
+import { NotificationService } from '../notification/notification.service';
 
 @Module({
   imports: [PrismaModule],
@@ -17,6 +18,7 @@ import { TagsRepository } from '../tags/tags.repository';
     TripsService,
     TripsRepository,
     TagsRepository,
+    NotificationService,
   ],
   exports: [SOSService, SOSRepository, TripsService, TripsRepository],
 })
