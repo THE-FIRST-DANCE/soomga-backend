@@ -103,9 +103,8 @@ export class TripsRepository implements BoardsRepositoryInterface {
     });
   }
 
-  remove(id: number): Promise<void> {
-    this.prisma.board.delete({ where: { id } });
-    return;
+  remove(id: number): Promise<Board> {
+    return this.prisma.board.delete({ where: { id } });
   }
 
   async like(id: number, userId: number) {
