@@ -225,9 +225,9 @@ export class GuidesRepository {
     return this.prismaService.$queryRaw`
       SELECT
         "guideId",
-        AVG("communicationScore") AS "avgCommunicationScore",
-        AVG("kindnessScore") AS "avgKindnessScore",
-        AVG("locationScore") AS "avgLocationScore",
+        ROUND(AVG("communicationScore"), 1) AS "avgCommunicationScore",
+        ROUND(AVG("kindnessScore"), 1) AS "avgKindnessScore",
+        ROUND(AVG("locationScore"), 1) AS "avgLocationScore",
         ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3, 1) AS "totalAvgScore"
       FROM
         Public."GuideReview"
