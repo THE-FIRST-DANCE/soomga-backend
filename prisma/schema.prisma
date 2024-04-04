@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output = "soomga-erd.svg"
+}
+
 model Member {
   id         Int           @id @default(autoincrement())
   email      String?       @unique
@@ -69,23 +74,24 @@ model GuideReview {
 }
 
 model Board {
-  id        Int          @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   title     String?
+  url       String?       @unique @default(uuid())
   overview  String?
   content   String?
   lat       Float?
   lng       Float?
-  type      BoardType?   @default(TRIP)
+  type      BoardType?    @default(TRIP)
   status    AccessStatus? @default(PUBLIC)
   process   BoardStatus?  @default(ACTIVE)
-  createdAt DateTime?    @default(now())
-  updatedAt DateTime?    @updatedAt
+  createdAt DateTime?     @default(now())
+  updatedAt DateTime?     @updatedAt
   deletedAt DateTime?
 
-  tags  BoardTag[]
-  likes BoardLike[]
+  tags     BoardTag[]
+  likes    BoardLike[]
   comments Comment[]
-  files BoardFile[]
+  files    BoardFile[]
 
   authorId Int?
   author   Member? @relation(fields: [authorId], references: [id])
@@ -105,15 +111,15 @@ model Comment {
 }
 
 model BoardLike {
-  createdAt DateTime? @default(now())
-
   boardId Int
   board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  @@unique([boardId, memberId])
+  createdAt DateTime? @default(now())
+
+  @@id([boardId, memberId])
 }
 
 model Tag {
@@ -131,7 +137,7 @@ model MemberTag {
   tagId Int
   tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@unique([memberId, tagId])
+  @@id([memberId, tagId])
 }
 
 model BoardTag {
@@ -141,7 +147,7 @@ model BoardTag {
   tagId Int
   tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@unique([boardId, tagId])
+  @@id([boardId, tagId])
 }
 
 model Language {
@@ -159,7 +165,7 @@ model MemberLanguage {
   languageId Int
   language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
 
-  @@unique([memberId, languageId])
+  @@id([memberId, languageId])
 }
 
 model LanguageCertification {
@@ -179,7 +185,7 @@ model GuideLanguageCertification {
   languageCertificationId Int
   languageCertification   LanguageCertification @relation(fields: [languageCertificationId], references: [id], onDelete: Cascade)
 
-  @@unique([guideId, languageCertificationId])
+  @@id([guideId, languageCertificationId])
 }
 
 model Plan {
@@ -298,7 +304,7 @@ model ChatroomParticipants {
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  @@unique([chatroomId, memberId])
+  @@id([chatroomId, memberId])
 }
 
 model ChatroomMessage {
@@ -346,7 +352,7 @@ model BoardFile {
   fileId String
   file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
-  @@unique([boardId, fileId])
+  @@id([boardId, fileId])
 }
 
 enum Provider {

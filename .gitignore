@@ -54,3 +54,7 @@ lerna-debug.log*
 
 # Redis
 /redis
+
+
+# ERD
+/prisma/*erd*.svg
