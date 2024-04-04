@@ -160,7 +160,11 @@ export class GuidesRepository {
       temperature,
     } = options;
 
-    const whereCondition: Prisma.GuideProfileWhereInput = {};
+    const whereCondition: Prisma.GuideProfileWhereInput = {
+      member: {
+        role: Role.GUIDE,
+      },
+    };
 
     if (cursor) {
       whereCondition.id = { lt: cursor };
