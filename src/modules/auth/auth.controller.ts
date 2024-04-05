@@ -13,8 +13,10 @@ import { Request, Response } from 'express';
 import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthGoogleGuard,
+  AuthGoogleMobileGuard,
   AuthJwtRefreshGuard,
   AuthLineGuard,
+  AuthLineMobileGuard,
   AuthMemberGuard,
 } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -119,9 +121,17 @@ export class AuthController {
   @UseGuards(AuthGoogleGuard)
   async googleLogin() {}
 
+  @Get('google/mobile')
+  @UseGuards(AuthGoogleMobileGuard)
+  async googleMobileLogin() {}
+
   @Get('line')
   @UseGuards(AuthLineGuard)
   async lineLogin() {}
+
+  @Get('line/mobile')
+  @UseGuards(AuthLineMobileGuard)
+  async lineMobileLogin() {}
 
   @Get('google/callback')
   @UseGuards(AuthGoogleGuard)
@@ -149,6 +159,34 @@ export class AuthController {
     this.setCookies(res, accessToken, refreshToken);
 
     return res.redirect(`${this.base.loadBalancerUrl}/redirect`);
+  }
+
+  @Get('google/mobile/callback')
+  @UseGuards(AuthGoogleMobileGuard)
+  async googleMobileAuthRedirect(
+    @Req() req: Request & { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.authService.signInWithOAuth(req.user);
+
+    return res.redirect(
+      `${this.base.mobileUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
+  }
+
+  @Get('line/mobile/callback')
+  @UseGuards(AuthLineMobileGuard)
+  async lineMobileAuthRedirect(
+    @Req() req: Request & { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.authService.signInWithOAuth(req.user);
+
+    return res.redirect(
+      `${this.base.mobileUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
   }
 
   @UseGuards(AuthJwtRefreshGuard)

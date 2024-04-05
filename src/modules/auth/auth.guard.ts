@@ -113,4 +113,10 @@ export class AuthGuideGuard extends AuthGuard('jwt') {
 export class AuthGoogleGuard extends AuthGuard('google') {}
 
 @Injectable()
+export class AuthGoogleMobileGuard extends AuthGuard('googleMobile') {}
+
+@Injectable()
 export class AuthLineGuard extends AuthGuard('line') {}
+
+@Injectable()
+export class AuthLineMobileGuard extends AuthGuard('lineMobile') {}
