@@ -1,5 +1,6 @@
 import { Config } from './config.interface';
 import packageJson from '../../package.json';
+import * as process from 'process';
 
 export const GLOBAL_CONFIG: Config = {
   nest: {
@@ -35,6 +36,7 @@ export const GLOBAL_CONFIG: Config = {
     backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
     loadBalancerUrl:
       process.env.FRONTEND_URL.split(',').shift() || 'http://localhost:3000',
+    mobileUrl: process.env.MOBILE_REDIRECT_URL || 'exp://192.168.0.20:8081',
   },
   cache: {
     ttl: +process.env.CACHE_TTL || 30_000,

@@ -33,6 +33,7 @@ export const envValidateSchema: Joi.ObjectSchema<Config> = Joi.object({
     frontendUrl: Joi.string().required(),
     backendUrl: Joi.string().required(),
     loadBalancerUrl: Joi.string().required(),
+    mobileUrl: Joi.string().required(),
   }),
   cache: Joi.object<Config['cache']>({
     ttl: Joi.number().required(),
