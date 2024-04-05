@@ -25,7 +25,6 @@ export class SOSController {
   @ApiOperation({ summary: 'Create a new SOS' })
   @Post()
   create(@Body() createSosDto: CreateSOSDto) {
-    console.log(createSosDto);
     return this.sosService.create(createSosDto);
   }
 
