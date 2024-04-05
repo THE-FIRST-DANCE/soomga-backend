@@ -57,6 +57,31 @@ export class TripsRepository implements BoardsRepositoryInterface {
     });
   }
 
+  async findPagination(
+    cursor?: number,
+    limit: number = 10,
+    areas?: number[],
+    sort?: string,
+  ): Promise<Board[]> {
+    return this.prisma.board.findMany({
+      where: {
+        type: BoardType.TRIP,
+        ...(cursor && { id: { lt: cursor } }),
+        ...(areas && areas.length > 0 && { areaId: { in: areas } }),
+      },
+      take: limit,
+      orderBy: { id: 'desc' },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        author: true,
+      },
+    });
+  }
+
   findOne(id: number): Promise<Board> {
     return this.prisma.board.findUnique({
       where: { id },

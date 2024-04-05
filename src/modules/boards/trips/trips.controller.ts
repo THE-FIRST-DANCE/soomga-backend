@@ -9,6 +9,7 @@ import {
   UseGuards,
   Res,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { TripsService } from './trips.service';
@@ -17,9 +18,12 @@ import { UpdateTripDto } from './dto/update-trip.dto';
 import { AuthJwtGuard } from '../../auth/auth.guard';
 import { Member } from '@prisma/client';
 import { Response } from 'express';
+import { Pagination } from '../../../shared/decorators/pagination.decorator';
+import { ParseIntWithDefaultPipe } from '../../../shared/pagination/pagination.pipe';
+import { ParseIntArrayPipe } from '../../../pipes/ParseIntArrayPipe.service';
 
 @ApiTags('여행 게시판 API')
-@UseGuards(AuthJwtGuard)
+// @UseGuards(AuthJwtGuard)
 @Controller('trips')
 export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
@@ -37,6 +41,19 @@ export class TripsController {
   @ApiOperation({ summary: '모든 여행 게시글 조회' })
   findAll() {
     return this.tripsService.findAll();
+  }
+
+  @Get('find')
+  @ApiOperation({ summary: '조건 여행 게시물 무한 스크롤' })
+  @Pagination()
+  findPagination(
+    @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
+    @Query('limit', ParseIntWithDefaultPipe) limit?: number,
+    @Query('areas', ParseIntArrayPipe) areas?: number[],
+    @Query('sort', ParseIntWithDefaultPipe) sort?: string,
+  ) {
+    console.log(cursor, limit, areas, sort);
+    return this.tripsService.findPagination(cursor, limit, areas, sort);
   }
 
   @Get(':id')

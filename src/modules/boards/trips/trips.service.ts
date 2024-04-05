@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { TripsRepository } from './trips.repository';
 import { UpdateTripDto } from './dto/update-trip.dto';
+import { createPageResponse } from '../../../shared/pagination/pagination.utils';
 
 @Injectable()
 export class TripsService {
@@ -12,6 +13,22 @@ export class TripsService {
 
   findAll() {
     return this.tripsRepository.findAll();
+  }
+
+  async findPagination(
+    cursor?: number,
+    limit?: number,
+    areas?: number[],
+    sort?: string,
+  ) {
+    const board = await this.tripsRepository.findPagination(
+      cursor,
+      limit,
+      areas,
+      sort,
+    );
+
+    return createPageResponse(board, { cursor, limit }, board.length);
   }
 
   findOne(id: number) {
