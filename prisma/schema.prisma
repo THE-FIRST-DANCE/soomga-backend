@@ -93,6 +93,9 @@ model Board {
   comments Comment[]
   files    BoardFile[]
 
+  areaId  Int?
+  area    Area? @relation(fields: [areaId], references: [id])
+
   authorId Int?
   author   Member? @relation(fields: [authorId], references: [id])
 }
@@ -324,6 +327,7 @@ model Area {
   name String @unique
 
   guides GuideArea[]
+  boards Board[]
 }
 
 model GuideArea {
