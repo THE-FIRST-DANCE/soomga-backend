@@ -41,7 +41,7 @@ export class GuidesRepository {
     limit = 10,
     options?: GuidePaginationOptions,
   ) {
-    const whereCondition = this.buildWhereCondition(options);
+    const whereCondition = this.buildWhereCondition(cursor, options);
     const orderBy = this.buildOrderBy(options);
 
     const guideAvgScores = await this.getGuidesWithMatchingAvgScores(
@@ -52,7 +52,6 @@ export class GuidesRepository {
     const guides: GuideProfile[] =
       await this.prismaService.guideProfile.findMany({
         where: whereCondition,
-        cursor: cursor ? { id: cursor } : undefined,
         take: limit,
         orderBy: orderBy,
         include: {
@@ -147,6 +146,7 @@ export class GuidesRepository {
   }
 
   private buildWhereCondition(
+    cursor?: number,
     options?: GuidePaginationOptions,
   ): Prisma.GuideProfileWhereInput {
     const {
@@ -165,6 +165,10 @@ export class GuidesRepository {
         role: Role.GUIDE,
       },
     };
+
+    if (cursor) {
+      whereCondition.id = { lt: cursor };
+    }
 
     if (gender) {
       whereCondition.member.gender = options.gender;
@@ -239,18 +243,34 @@ export class GuidesRepository {
    * @param id - 가이드의 고유 식별자
    */
   async findOne(id: number) {
-    return this.prismaService.guideProfile.findUnique({
-      where: { id, member: { role: Role.GUIDE } },
+    return this.prismaService.member.findUnique({
+      where: { id, role: Role.GUIDE },
       include: {
-        member: {
+        guideProfile: {
           include: {
-            schedules: true,
-            tags: true,
-            languages: { select: { language: true } },
+            areas: {
+              select: {
+                area: true,
+              },
+            },
+            languageCertifications: {
+              select: {
+                languageCertification: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
-        areas: { select: { area: true } },
-        languageCertifications: { select: { languageCertification: true } },
+        languages: {
+          select: {
+            language: true,
+          },
+        },
+        tags: { include: { tag: { select: { id: true, name: true } } } },
       },
     });
   }
