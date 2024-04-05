@@ -13,6 +13,8 @@ import { CoolsmsModule } from '../coolsms/coolsms.module';
 import { AuthRepository } from './auth.repository';
 import { SecurityConfig } from '../../configs/config.interface';
 import { JwtRefreshStrategy } from './auth.jwt-refresh.strategy';
+import { GoogleMobileStrategy } from './auth.googleMobile.strategy';
+import { LineMobileStrategy } from './auth.lineMobile.strategy';
 
 @Module({
   imports: [
@@ -37,7 +39,9 @@ import { JwtRefreshStrategy } from './auth.jwt-refresh.strategy';
     JwtStrategy,
     JwtRefreshStrategy,
     GoogleStrategy,
+    GoogleMobileStrategy,
     LineStrategy,
+    LineMobileStrategy,
     AuthRepository,
   ],
   controllers: [AuthController],
