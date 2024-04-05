@@ -13,6 +13,11 @@ export interface GuidePaginationOptions {
   sort?: GuideSort;
 }
 
+export interface GuideReviewPaginationOptions {
+  reviewerId?: number;
+  guideId?: number;
+}
+
 export enum GuideOrderBy {
   TEMPERATURE = 'temperature',
   GUIDE_COUNT = 'guideCount',

@@ -54,7 +54,6 @@ export function GuidePagination() {
       name: 'orderBy',
       type: 'string',
       enum: GuideOrderBy,
-      example: GuideOrderBy.TEMPERATURE,
       required: false,
     }),
     ApiQuery({
