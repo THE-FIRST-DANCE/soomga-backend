@@ -5,9 +5,12 @@ import { RegisterGuideDto } from './dto/register-guide.dto';
 import { MembersRepository } from '../members/members.repository';
 import {
   GuidePaginationOptions,
+  GuideReviewPaginationOptions,
   GuideWithMatchingAvgScore,
 } from './guides.interface';
 import { DateHelpers } from 'src/shared/helpers/date.helpers';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class GuidesRepository {
@@ -434,6 +437,66 @@ export class GuidesRepository {
     return this.prismaService.guideProfile.update({
       where: { id },
       data: { phoneNumber },
+    });
+  }
+
+  async getGuideReviewsWithPagination(
+    cursor?: number,
+    limit = 10,
+    options?: GuideReviewPaginationOptions,
+  ) {
+    const { reviewerId, guideId } = options;
+    const whereCondition: Prisma.GuideReviewWhereInput = {};
+
+    if (cursor) {
+      whereCondition.id = { lt: cursor };
+    }
+
+    if (reviewerId) {
+      whereCondition.reviewerId = reviewerId;
+    }
+
+    if (guideId) {
+      whereCondition.guideId = guideId;
+    }
+
+    return this.prismaService.guideReview.findMany({
+      where: whereCondition,
+      take: limit,
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async createReview(
+    guideId: number,
+    reviewerId: number,
+    createReviewDto: CreateReviewDto,
+  ) {
+    return this.prismaService.guideReview.create({
+      data: {
+        guideId,
+        reviewerId,
+        ...createReviewDto,
+      },
+    });
+  }
+
+  findReview(reviewId: number) {
+    return this.prismaService.guideReview.findUnique({
+      where: { id: reviewId },
+    });
+  }
+
+  updateReview(reviewId: number, updateReviewDto: UpdateReviewDto) {
+    this.prismaService.guideReview.update({
+      where: { id: reviewId },
+      data: updateReviewDto,
+    });
+  }
+
+  deleteReview(reviewId: number) {
+    return this.prismaService.guideReview.delete({
+      where: { id: reviewId },
     });
   }
 }

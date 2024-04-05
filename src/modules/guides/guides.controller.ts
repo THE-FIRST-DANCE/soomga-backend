@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -39,6 +41,8 @@ import { ParseGenderPipe } from './guides.pipe';
 import { GuidePagination } from './guides.decorator';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { User } from '../auth/auth.decorator';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 
 @ApiTags('가이드 API')
 @Controller('guides')
@@ -102,6 +106,84 @@ export class GuidesController {
   })
   async findOne(@Param('id') id: string) {
     return this.guidesService.findOne(+id);
+  }
+
+  @Get(':guideId/reviews')
+  @ApiOperation({
+    summary: '가이드 리뷰 조회',
+    description: '특정 가이드의 리뷰를 조회합니다.',
+  })
+  @Pagination()
+  async getReviews(
+    @Param('guideId') guideId: string,
+    @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
+    @Query('limit', ParseIntWithDefaultPipe) limit?: number,
+  ) {
+    return this.guidesService.getReviews(+guideId, cursor, limit);
+  }
+
+  @Post(':guideId/reviews')
+  @UseGuards(AuthUserGuard)
+  @ApiOperation({
+    summary: '가이드 리뷰 작성',
+    description: '특정 가이드에 리뷰를 작성합니다.',
+  })
+  async createReview(
+    @Param('guideId') guideId: string,
+    @User() user: Member,
+    @Body() createReviewDto: CreateReviewDto,
+    @Res() res: Response,
+  ) {
+    const { id: reviewerId } = user;
+
+    await this.guidesService.createReview(
+      +guideId,
+      +reviewerId,
+      createReviewDto,
+    );
+
+    return res.json({ message: '리뷰가 작성되었습니다.' });
+  }
+
+  @Patch('reviews/:reviewId')
+  @UseGuards(AuthUserGuard)
+  @ApiOperation({
+    summary: '가이드 리뷰 수정',
+    description: '특정 가이드의 리뷰를 수정합니다.',
+  })
+  async updateReview(
+    @Param('reviewId') reviewId: string,
+    @User() user: Member,
+    @Body() updateReviewDto: UpdateReviewDto,
+    @Res() res: Response,
+  ) {
+    const { id: reviewerId } = user;
+
+    await this.guidesService.updateReview(
+      +reviewId,
+      +reviewerId,
+      updateReviewDto,
+    );
+
+    return res.json({ message: '리뷰가 수정되었습니다.' });
+  }
+
+  @Delete('reviews/:reviewId')
+  @UseGuards(AuthUserGuard)
+  @ApiOperation({
+    summary: '가이드 리뷰 삭제',
+    description: '특정 가이드의 리뷰를 삭제합니다.',
+  })
+  async deleteReview(
+    @Param('reviewId') reviewId: string,
+    @User() user: Member,
+    @Res() res: Response,
+  ) {
+    const { id: reviewerId } = user;
+
+    await this.guidesService.deleteReview(+reviewId, +reviewerId);
+
+    return res.json({ message: '리뷰가 삭제되었습니다.' });
   }
 
   @Post('register')
