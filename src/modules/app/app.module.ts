@@ -25,6 +25,7 @@ import { GLOBAL_CONFIG } from '../../configs/global.config';
 import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { UploadsModule } from '../uploads/uploads.module';
 import { envValidateSchema } from 'src/configs/env-validate.schema';
+import { AreasModule } from '../areas/areas.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { envValidateSchema } from 'src/configs/env-validate.schema';
     AuthModule,
     AdminModule,
     BoardsModule,
+    AreasModule,
     TagsModule,
     GuidesModule,
     MembersModule,
