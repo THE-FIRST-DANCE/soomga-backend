@@ -26,6 +26,7 @@ import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { UploadsModule } from '../uploads/uploads.module';
 import { envValidateSchema } from 'src/configs/env-validate.schema';
 import { AreasModule } from '../areas/areas.module';
+import { MypageModule } from '../mypage/mypage.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AreasModule } from '../areas/areas.module';
     AdminModule,
     BoardsModule,
     AreasModule,
+    MypageModule,
     TagsModule,
     GuidesModule,
     MembersModule,
