@@ -44,13 +44,16 @@ export class GuidesRepository {
     limit = 10,
     options?: GuidePaginationOptions,
   ) {
-    const whereCondition = this.buildWhereCondition(cursor, options);
-    const orderBy = this.buildOrderBy(options);
-
     const guideAvgScores = await this.getGuidesWithMatchingAvgScores(
-      options.score || [0, 1, 2, 3, 4, 5],
+      options.score,
     );
-    console.log('🚀 ~ GuidesRepository ~ guideAvgScores:', guideAvgScores);
+
+    const whereCondition = this.buildWhereCondition(
+      guideAvgScores,
+      cursor,
+      options,
+    );
+    const orderBy = this.buildOrderBy(options);
 
     const guides: GuideProfile[] =
       await this.prismaService.guideProfile.findMany({
@@ -105,25 +108,19 @@ export class GuidesRepository {
   ) {
     const { guidesWithMatchingAvgScores } = additional;
 
-    if (guidesWithMatchingAvgScores) {
-      return guides
-        .filter((guide) =>
-          guidesWithMatchingAvgScores.some((item) => item.guideId === guide.id),
-        )
-        .map((guide) => {
-          const matching = guidesWithMatchingAvgScores.find(
-            (item) => item.guideId === guide.id,
-          );
+    return guides.map((guide) => {
+      const matchingScore = guidesWithMatchingAvgScores?.find(
+        (score) => score.guideId === guide.id,
+      );
 
-          return {
-            ...guide,
-            avgLocationScore: +matching?.avgLocationScore || 0,
-            avgKindnessScore: +matching?.avgKindnessScore || 0,
-            avgCommunicationScore: +matching?.avgCommunicationScore || 0,
-            totalAvgScore: +matching?.totalAvgScore || 0,
-          };
-        });
-    }
+      return {
+        ...guide,
+        avgCommunicationScore: matchingScore?.avgCommunicationScore || 0,
+        avgKindnessScore: matchingScore?.avgKindnessScore || 0,
+        avgLocationScore: matchingScore?.avgLocationScore || 0,
+        totalAvgScore: matchingScore?.totalAvgScore || 0,
+      };
+    });
   }
 
   private buildOrderBy({
@@ -149,6 +146,7 @@ export class GuidesRepository {
   }
 
   private buildWhereCondition(
+    matchingAvgScores: GuideWithMatchingAvgScore[],
     cursor?: number,
     options?: GuidePaginationOptions,
   ): Prisma.GuideProfileWhereInput {
@@ -168,6 +166,14 @@ export class GuidesRepository {
         role: Role.GUIDE,
       },
     };
+
+    if (matchingAvgScores) {
+      whereCondition.AND = {
+        id: {
+          in: matchingAvgScores.map((score) => score.guideId),
+        },
+      };
+    }
 
     if (cursor) {
       whereCondition.id = { lt: cursor };
@@ -225,19 +231,29 @@ export class GuidesRepository {
   async getGuidesWithMatchingAvgScores(
     scores: number[],
   ): Promise<GuideWithMatchingAvgScore[]> {
+    if (!scores || scores.length === 0) scores = [0, 1, 2, 3, 4, 5];
+
     return this.prismaService.$queryRaw`
       SELECT
-        "guideId",
-        ROUND(AVG("communicationScore"), 1) AS "avgCommunicationScore",
-        ROUND(AVG("kindnessScore"), 1) AS "avgKindnessScore",
-        ROUND(AVG("locationScore"), 1) AS "avgLocationScore",
-        ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3, 1) AS "totalAvgScore"
+        g."id" AS "guideId",
+        COALESCE(ROUND(AVG(r."communicationScore"), 1), 0) AS "avgCommunicationScore",
+        COALESCE(ROUND(AVG(r."kindnessScore"), 1), 0) AS "avgKindnessScore",
+        COALESCE(ROUND(AVG(r."locationScore"), 1), 0) AS "avgLocationScore",
+        COALESCE(ROUND((AVG(r."communicationScore") + AVG(r."kindnessScore") + AVG(r."locationScore")) / 3, 1), 0) AS "totalAvgScore"
       FROM
-        Public."GuideReview"
+        Public."GuideProfile" as g
+      LEFT JOIN
+        Public."GuideReview" as r
+      ON
+        g."id" = r."guideId"
       GROUP BY
-        "guideId"
+        g."id"
       HAVING
-        ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3) = ANY(${scores})
+        CASE WHEN ARRAY_LENGTH(${scores}, 1) > 0 THEN
+          ROUND((COALESCE(AVG(r."communicationScore"), 0) + COALESCE(AVG(r."kindnessScore"), 0) + COALESCE(AVG(r."locationScore"), 0)) / 3, 0) = ANY(${scores})
+        ELSE
+          TRUE
+        END
     `;
   }
 
