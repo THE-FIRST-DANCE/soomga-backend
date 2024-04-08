@@ -88,4 +88,17 @@ export class MyPageController {
     const { id } = user;
     return this.myPageService.getMyGuideReviews(id, cursor, limit);
   }
+
+  @Get('follows')
+  @UseGuards(AuthMemberGuard)
+  @Pagination()
+  @ApiOperation({ summary: '내 팔로우 가져오기' })
+  async getMyFollows(
+    @User() user: Member,
+    @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
+    @Query('limit', ParseIntWithDefaultPipe) limit?: number,
+  ) {
+    const { id } = user;
+    return this.myPageService.getMyFollows(id, cursor, limit);
+  }
 }

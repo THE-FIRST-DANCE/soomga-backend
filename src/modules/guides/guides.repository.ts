@@ -159,6 +159,7 @@ export class GuidesRepository {
       languages,
       score,
       temperature,
+      followerId,
     } = options;
 
     const whereCondition: Prisma.GuideProfileWhereInput = {
@@ -221,6 +222,14 @@ export class GuidesRepository {
       whereCondition.languageCertifications = {
         some: {
           languageCertificationId: { in: languageCertifications },
+        },
+      };
+    }
+
+    if (followerId) {
+      whereCondition.member.followings = {
+        some: {
+          followerId,
         },
       };
     }
@@ -480,6 +489,11 @@ export class GuidesRepository {
       where: whereCondition,
       take: limit,
       orderBy: { id: 'desc' },
+      include: {
+        guide: {
+          include: { member: true },
+        },
+      },
     });
   }
 

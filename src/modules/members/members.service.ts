@@ -63,4 +63,19 @@ export class MembersService {
   async comeback(id: number) {
     return this.membersRepository.comeback(id);
   }
+
+  async followToggle(followingId: number, followerId: number) {
+    const isFollowing = await this.membersRepository.isFollowing(
+      followingId,
+      followerId,
+    );
+
+    if (isFollowing) {
+      await this.membersRepository.unfollow(followingId, followerId);
+    } else {
+      await this.membersRepository.follow(followingId, followerId);
+    }
+
+    return !isFollowing;
+  }
 }

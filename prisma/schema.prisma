@@ -40,6 +40,9 @@ model Member {
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
 
+  followers  Follow[] @relation("followerRelation")
+  followings Follow[] @relation("followingRelation")
+
   guideProfile GuideProfile?
 }
 
@@ -353,6 +356,15 @@ model BoardFile {
   file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@id([boardId, fileId])
+}
+
+model Follow {
+  followerId  Int
+  follower    Member @relation("followerRelation", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId Int
+  following   Member @relation("followingRelation", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
 }
 
 enum Provider {
