@@ -9,7 +9,7 @@ datasource db {
 
 generator erd {
   provider = "prisma-erd-generator"
-  output = "soomga-erd.svg"
+  output   = "soomga-erd.svg"
 }
 
 model Member {
