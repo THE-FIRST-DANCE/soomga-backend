@@ -46,6 +46,7 @@ export interface BaseConfig {
   frontendUrl: string;
   backendUrl: string;
   loadBalancerUrl: string;
+  mobileUrl: string;
 }
 
 export interface CacheConfig {

@@ -29,29 +29,31 @@ export function GuidePagination() {
     ApiQuery({
       name: 'areas',
       type: 'string',
+      example: '1,2',
       required: false,
     }),
     ApiQuery({
       name: 'languages',
       type: 'string',
+      example: '1,2',
       required: false,
     }),
     ApiQuery({
       name: 'languageCertifications',
       type: 'string',
+      example: '1,2',
       required: false,
     }),
     ApiQuery({
       name: 'score',
       type: 'string',
-      example: '0 1 2 3 4 5',
+      example: '0,1',
       required: false,
     }),
     ApiQuery({
       name: 'orderBy',
       type: 'string',
       enum: GuideOrderBy,
-      example: GuideOrderBy.TEMPERATURE,
       required: false,
     }),
     ApiQuery({

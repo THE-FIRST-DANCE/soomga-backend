@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, Role } from '@prisma/client';
+import { GuideProfile, Prisma, Role } from '@prisma/client';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import { MembersRepository } from '../members/members.repository';
 import {
-  GuidePaginatedData,
   GuidePaginationOptions,
+  GuideReviewPaginationOptions,
   GuideWithMatchingAvgScore,
 } from './guides.interface';
 import { DateHelpers } from 'src/shared/helpers/date.helpers';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class GuidesRepository {
@@ -42,78 +44,83 @@ export class GuidesRepository {
     limit = 10,
     options?: GuidePaginationOptions,
   ) {
-    const whereCondition = this.buildWhereCondition(cursor, options);
+    const guideAvgScores = await this.getGuidesWithMatchingAvgScores(
+      options.score,
+    );
+
+    const whereCondition = this.buildWhereCondition(
+      guideAvgScores,
+      cursor,
+      options,
+    );
     const orderBy = this.buildOrderBy(options);
 
-    const guidesWithMatchingAvgScores =
-      await this.getGuidesWithMatchingAvgScores(
-        options?.score ?? [0, 1, 2, 3, 4, 5],
-      );
-
-    const guides: GuidePaginatedData[] =
-      await this.prismaService.member.findMany({
+    const guides: GuideProfile[] =
+      await this.prismaService.guideProfile.findMany({
         where: whereCondition,
         take: limit,
         orderBy: orderBy,
-        select: {
-          id: true,
-          nickname: true,
-          avatar: true,
-          birthdate: true,
-          languages: {
-            select: {
-              language: true,
-            },
-          },
-          guideProfile: {
-            select: {
-              areas: {
+        include: {
+          member: {
+            include: {
+              languages: {
                 select: {
-                  area: true,
+                  language: true,
                 },
               },
-              temperature: true,
+              tags: {
+                select: {
+                  tag: true,
+                },
+              },
             },
           },
-          guideReviews: {},
-          tags: {
+          areas: {
             select: {
-              tag: true,
+              area: true,
+            },
+          },
+          languageCertifications: {
+            select: {
+              languageCertification: true,
+            },
+          },
+          _count: {
+            select: {
+              reviews: true,
             },
           },
         },
       });
 
     const result = this.enrichGuides(guides, {
-      guidesWithMatchingAvgScores,
+      guidesWithMatchingAvgScores: guideAvgScores,
     });
 
     return result;
   }
 
   private enrichGuides(
-    guides: GuidePaginatedData[],
+    guides: GuideProfile[],
     additional: {
       guidesWithMatchingAvgScores?: GuideWithMatchingAvgScore[];
     },
   ) {
     const { guidesWithMatchingAvgScores } = additional;
 
-    if (guidesWithMatchingAvgScores) {
-      return guides.map((guide) => {
-        const matching = guidesWithMatchingAvgScores.find(
-          (item) => item.guideId === guide.id,
-        );
+    return guides.map((guide) => {
+      const matchingScore = guidesWithMatchingAvgScores?.find(
+        (score) => score.guideId === guide.id,
+      );
 
-        return {
-          ...guide,
-          avgLocationScore: +matching?.avgLocationScore || 0,
-          avgKindnessScore: +matching?.avgKindnessScore || 0,
-          avgCommunicationScore: +matching?.avgCommunicationScore || 0,
-          totalAvgScore: +matching?.totalAvgScore || 0,
-        };
-      });
-    }
+      return {
+        ...guide,
+        avgCommunicationScore: matchingScore?.avgCommunicationScore || 0,
+        avgKindnessScore: matchingScore?.avgKindnessScore || 0,
+        avgLocationScore: matchingScore?.avgLocationScore || 0,
+        totalAvgScore: matchingScore?.totalAvgScore || 0,
+      };
+    });
   }
 
   private buildOrderBy({
@@ -122,24 +129,27 @@ export class GuidesRepository {
   }: Pick<
     GuidePaginationOptions,
     'orderBy' | 'sort'
-  >): Prisma.MemberOrderByWithRelationInput {
+  >): Prisma.GuideProfileOrderByWithRelationInput {
     if (!orderBy) {
       return { id: 'desc' };
     }
 
     if (orderBy === 'guideCount') {
-      return { guideReviews: { _count: sort } };
+      return {
+        reviews: { _count: sort },
+      };
     }
 
     if (orderBy === 'temperature') {
-      return { guideProfile: { temperature: sort } };
+      return { temperature: sort };
     }
   }
 
   private buildWhereCondition(
+    matchingAvgScores: GuideWithMatchingAvgScore[],
     cursor?: number,
     options?: GuidePaginationOptions,
-  ): Prisma.MemberWhereInput {
+  ): Prisma.GuideProfileWhereInput {
     const {
       areas,
       age,
@@ -151,16 +161,26 @@ export class GuidesRepository {
       temperature,
     } = options;
 
-    const whereCondition: Prisma.MemberWhereInput = {
-      role: Role.GUIDE,
+    const whereCondition: Prisma.GuideProfileWhereInput = {
+      member: {
+        role: Role.GUIDE,
+      },
     };
+
+    if (matchingAvgScores) {
+      whereCondition.AND = {
+        id: {
+          in: matchingAvgScores.map((score) => score.guideId),
+        },
+      };
+    }
 
     if (cursor) {
       whereCondition.id = { lt: cursor };
     }
 
     if (gender) {
-      whereCondition.gender = options.gender;
+      whereCondition.member.gender = options.gender;
     }
 
     if (age) {
@@ -168,36 +188,29 @@ export class GuidesRepository {
         age.min,
         age.max,
       );
-      whereCondition.birthdate = {
+      whereCondition.member.birthdate = {
         gte: start,
         lte: end,
       };
     }
 
-    // TODO:
-    // guideCount
-
     if (temperature) {
-      whereCondition.guideProfile = {
-        temperature: {
-          gte: temperature.min,
-          lte: temperature.max,
-        },
+      whereCondition.temperature = {
+        gte: temperature.min,
+        lte: temperature.max,
       };
     }
 
     if (areas) {
-      whereCondition.guideProfile = {
-        areas: {
-          some: {
-            areaId: { in: areas },
-          },
+      whereCondition.areas = {
+        some: {
+          areaId: { in: areas },
         },
       };
     }
 
     if (languages) {
-      whereCondition.languages = {
+      whereCondition.member.languages = {
         some: {
           languageId: { in: languages },
         },
@@ -205,11 +218,9 @@ export class GuidesRepository {
     }
 
     if (languageCertifications) {
-      whereCondition.guideProfile = {
-        languageCertifications: {
-          some: {
-            languageCertificationId: { in: languageCertifications },
-          },
+      whereCondition.languageCertifications = {
+        some: {
+          languageCertificationId: { in: languageCertifications },
         },
       };
     }
@@ -220,19 +231,29 @@ export class GuidesRepository {
   async getGuidesWithMatchingAvgScores(
     scores: number[],
   ): Promise<GuideWithMatchingAvgScore[]> {
+    if (!scores || scores.length === 0) scores = [0, 1, 2, 3, 4, 5];
+
     return this.prismaService.$queryRaw`
       SELECT
-        "guideId",
-        AVG("communicationScore") AS "avgCommunicationScore",
-        AVG("kindnessScore") AS "avgKindnessScore",
-        AVG("locationScore") AS "avgLocationScore",
-        ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3) AS "totalAvgScore"
+        g."id" AS "guideId",
+        COALESCE(ROUND(AVG(r."communicationScore"), 1), 0) AS "avgCommunicationScore",
+        COALESCE(ROUND(AVG(r."kindnessScore"), 1), 0) AS "avgKindnessScore",
+        COALESCE(ROUND(AVG(r."locationScore"), 1), 0) AS "avgLocationScore",
+        COALESCE(ROUND((AVG(r."communicationScore") + AVG(r."kindnessScore") + AVG(r."locationScore")) / 3, 1), 0) AS "totalAvgScore"
       FROM
-        Public."GuideReview"
+        Public."GuideProfile" as g
+      LEFT JOIN
+        Public."GuideReview" as r
+      ON
+        g."id" = r."guideId"
       GROUP BY
-        "guideId"
+        g."id"
       HAVING
-        ROUND((AVG("communicationScore") + AVG("kindnessScore") + AVG("locationScore")) / 3) = ANY(${scores})
+        CASE WHEN ARRAY_LENGTH(${scores}, 1) > 0 THEN
+          ROUND((COALESCE(AVG(r."communicationScore"), 0) + COALESCE(AVG(r."kindnessScore"), 0) + COALESCE(AVG(r."locationScore"), 0)) / 3, 0) = ANY(${scores})
+        ELSE
+          TRUE
+        END
     `;
   }
 
@@ -243,11 +264,32 @@ export class GuidesRepository {
   async findOne(id: number) {
     return this.prismaService.member.findUnique({
       where: { id, role: Role.GUIDE },
-      select: {
-        avatar: true,
-        birthdate: true,
-        boardLikes: true,
-        guideProfile: true,
+      include: {
+        guideProfile: {
+          include: {
+            areas: {
+              select: {
+                area: true,
+              },
+            },
+            languageCertifications: {
+              select: {
+                languageCertification: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        languages: {
+          select: {
+            language: true,
+          },
+        },
+        tags: { include: { tag: { select: { id: true, name: true } } } },
       },
     });
   }
@@ -385,7 +427,6 @@ export class GuidesRepository {
     });
   }
 
-
   /**
    * 가이드에서 탈퇴하고, 멤버의 역할을 USER로 업데이트합니다.
    * @param id - 제거할 가이드의 ID.
@@ -412,6 +453,66 @@ export class GuidesRepository {
     return this.prismaService.guideProfile.update({
       where: { id },
       data: { phoneNumber },
+    });
+  }
+
+  async getGuideReviewsWithPagination(
+    cursor?: number,
+    limit = 10,
+    options?: GuideReviewPaginationOptions,
+  ) {
+    const { reviewerId, guideId } = options;
+    const whereCondition: Prisma.GuideReviewWhereInput = {};
+
+    if (cursor) {
+      whereCondition.id = { lt: cursor };
+    }
+
+    if (reviewerId) {
+      whereCondition.reviewerId = reviewerId;
+    }
+
+    if (guideId) {
+      whereCondition.guideId = guideId;
+    }
+
+    return this.prismaService.guideReview.findMany({
+      where: whereCondition,
+      take: limit,
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async createReview(
+    guideId: number,
+    reviewerId: number,
+    createReviewDto: CreateReviewDto,
+  ) {
+    return this.prismaService.guideReview.create({
+      data: {
+        guideId,
+        reviewerId,
+        ...createReviewDto,
+      },
+    });
+  }
+
+  findReview(reviewId: number) {
+    return this.prismaService.guideReview.findUnique({
+      where: { id: reviewId },
+    });
+  }
+
+  updateReview(reviewId: number, updateReviewDto: UpdateReviewDto) {
+    this.prismaService.guideReview.update({
+      where: { id: reviewId },
+      data: updateReviewDto,
+    });
+  }
+
+  deleteReview(reviewId: number) {
+    return this.prismaService.guideReview.delete({
+      where: { id: reviewId },
     });
   }
 }

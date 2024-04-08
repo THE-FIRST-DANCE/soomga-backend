@@ -13,6 +13,11 @@ export interface GuidePaginationOptions {
   sort?: GuideSort;
 }
 
+export interface GuideReviewPaginationOptions {
+  reviewerId?: number;
+  guideId?: number;
+}
+
 export enum GuideOrderBy {
   TEMPERATURE = 'temperature',
   GUIDE_COUNT = 'guideCount',
@@ -29,29 +34,4 @@ export interface GuideWithMatchingAvgScore {
   avgKindnessScore: number;
   avgLocationScore: number;
   totalAvgScore: number;
-}
-
-export interface GuidePaginatedData
-  extends Pick<Member, 'id' | 'nickname' | 'avatar' | 'birthdate'> {
-  languages: {
-    language: {
-      id: number;
-      name: string;
-    };
-  }[];
-  guideProfile: {
-    areas: {
-      area: {
-        id: number;
-        name: string;
-      };
-      temperature?: number;
-    }[];
-  };
-  tags: {
-    tag: {
-      id: number;
-      name: string;
-    };
-  }[];
 }
