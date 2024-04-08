@@ -106,4 +106,27 @@ export class MembersController {
   ) {
     return this.membersService.updateLanguages(+id, languageIds);
   }
+
+  @ApiOperation({
+    summary: '팔로우 하기',
+    description: '특정 아이디를 가진 멤버를 팔로우합니다.',
+  })
+  @Get(':followingId/follow')
+  @UseGuards(AuthMemberGuard)
+  async follow(
+    @User() user: Member,
+    @Param('followingId') followingId: string,
+    @Res() res: Response,
+  ) {
+    const { id: followerId } = user;
+    const isFollowing = await this.membersService.followToggle(
+      +followingId,
+      +followerId,
+    );
+    return res.json({
+      message: isFollowing
+        ? '팔로우가 완료되었습니다.'
+        : '언팔로우가 완료되었습니다.',
+    });
+  }
 }
