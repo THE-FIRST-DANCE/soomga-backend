@@ -104,4 +104,19 @@ export class MyPageService {
 
     return response;
   }
+
+  async getMyFollows(id: number, cursor: number, limit = 10) {
+    const options = {
+      followerId: id,
+    };
+
+    const guides = await this.guidesRepository.paginate(cursor, limit, options);
+    const response = createPageResponse(
+      guides,
+      { cursor, limit },
+      guides.length,
+    );
+
+    return response;
+  }
 }
