@@ -3,6 +3,7 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { TripsRepository } from './trips.repository';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { createPageResponse } from '../../../shared/pagination/pagination.utils';
+import { CommentDto } from '../sos/dto/comment.dto';
 
 @Injectable()
 export class TripsService {
@@ -45,5 +46,20 @@ export class TripsService {
 
   like(id: number, userId: number) {
     return this.tripsRepository.like(id, userId);
+  }
+
+  getComments(id: number) {
+    return this.tripsRepository.getComments(id);
+  }
+  comment(id: number, commentDto: CommentDto) {
+    return this.tripsRepository.comment(id, commentDto);
+  }
+
+  removeComment(commentId: number) {
+    return this.tripsRepository.removeComment(commentId);
+  }
+
+  updateComment(commentId: number, content: string) {
+    return this.tripsRepository.updateComment(commentId, content);
   }
 }
