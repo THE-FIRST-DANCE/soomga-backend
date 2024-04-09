@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { TagsRepository } from '../../tags/tags.repository';
+import { CommentDto } from '../sos/dto/comment.dto';
 
 @Injectable()
 export class TripsRepository implements BoardsRepositoryInterface {
@@ -57,6 +58,37 @@ export class TripsRepository implements BoardsRepositoryInterface {
     });
   }
 
+  findPagination(
+    cursor?: number,
+    limit: number = 10,
+    areas?: number[],
+    sort?: string,
+  ): Promise<Board[]> {
+    return this.prisma.board.findMany({
+      where: {
+        type: BoardType.TRIP,
+        ...(cursor && { id: { lt: cursor } }),
+        ...(areas && areas.length > 0 && { areaId: { in: areas } }),
+      },
+      take: limit,
+      orderBy: { id: 'desc' },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+        author: true,
+      },
+    });
+  }
+
   findOne(id: number): Promise<Board> {
     return this.prisma.board.findUnique({
       where: { id },
@@ -76,7 +108,22 @@ export class TripsRepository implements BoardsRepositoryInterface {
           },
         },
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
+        },
+        likes: {
+          select: {
+            memberId: true,
+          },
+        },
+        comments: {
+          include: {
+            member: {
+              select: {
+                avatar: true,
+                nickname: true,
+              },
+            },
+          },
         },
       },
     });
@@ -135,5 +182,49 @@ export class TripsRepository implements BoardsRepositoryInterface {
         },
       });
     }
+  }
+
+  getComments(id: number) {
+    return this.prisma.comment.findMany({
+      where: { boardId: id },
+      include: {
+        member: {
+          select: {
+            avatar: true,
+            nickname: true,
+            id: true,
+          },
+        },
+      },
+    });
+  }
+
+  async comment(id: number, commentDto: CommentDto) {
+    return this.prisma.comment.create({
+      data: {
+        content: commentDto.content,
+        memberId: commentDto.memberId,
+        boardId: id,
+      },
+    });
+  }
+
+  async removeComment(commentId: number) {
+    return this.prisma.comment.delete({
+      where: {
+        id: commentId,
+      },
+    });
+  }
+
+  async updateComment(commentId: number, content: string) {
+    return this.prisma.comment.update({
+      where: {
+        id: commentId,
+      },
+      data: {
+        content: content,
+      },
+    });
   }
 }
