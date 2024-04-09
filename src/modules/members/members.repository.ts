@@ -185,4 +185,35 @@ export class MembersRepository {
       },
     });
   }
+
+  async isFollowing(followingId: number, followerId: number) {
+    return this.prismaService.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followingId,
+          followerId,
+        },
+      },
+    });
+  }
+
+  async follow(followingId: number, followerId: number) {
+    return this.prismaService.follow.create({
+      data: {
+        followingId,
+        followerId,
+      },
+    });
+  }
+
+  async unfollow(followingId: number, followerId: number) {
+    return this.prismaService.follow.delete({
+      where: {
+        followerId_followingId: {
+          followingId,
+          followerId,
+        },
+      },
+    });
+  }
 }

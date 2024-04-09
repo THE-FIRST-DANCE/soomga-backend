@@ -10,7 +10,7 @@ export function createPageResponse<T extends ItemWithId>(
   pageRequest: PageRequest,
   totalItems: number,
 ): PageResponse<T> {
-  let nextCursor = pageRequest.cursor ?? null;
+  let nextCursor = null;
 
   if (totalItems > 0) {
     const lastItem = items[items.length - 1];
