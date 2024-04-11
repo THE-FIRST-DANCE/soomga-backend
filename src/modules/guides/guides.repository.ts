@@ -452,19 +452,6 @@ export class GuidesRepository {
     ]);
   }
 
-  async findByPhoneNumber(phoneNumber: string) {
-    return this.prismaService.guideProfile.findUnique({
-      where: { phoneNumber },
-    });
-  }
-
-  async registerPhoneNumber(id: number, phoneNumber: string) {
-    return this.prismaService.guideProfile.update({
-      where: { id },
-      data: { phoneNumber },
-    });
-  }
-
   async getGuideReviewsWithPagination(
     cursor?: number,
     limit = 10,

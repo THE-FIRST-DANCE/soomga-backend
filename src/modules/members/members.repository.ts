@@ -216,4 +216,9 @@ export class MembersRepository {
       },
     });
   }
+  findByPhoneNumber(phoneNumber: string) {
+    return this.prismaService.member.findUnique({
+      where: { phoneNumber },
+    });
+  }
 }

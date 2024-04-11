@@ -13,21 +13,23 @@ generator erd {
 }
 
 model Member {
-  id         Int           @id @default(autoincrement())
-  email      String?       @unique
-  nickname   String
-  password   String
-  avatar     String?
-  birthdate  DateTime?     @default(now())
-  gender     Gender?
-  status     MemberStatus? @default(ACTIVE)
-  role       Role?         @default(USER)
-  provider   Provider?     @default(LOCAL)
-  providerId String?
-  pushToken  String?
-  createdAt  DateTime?     @default(now())
-  updatedAt  DateTime?     @updatedAt
-  deletedAt  DateTime?
+  id              Int           @id @default(autoincrement())
+  email           String?       @unique
+  nickname        String
+  password        String
+  avatar          String?
+  birthdate       DateTime?     @default(now())
+  gender          Gender?
+  status          MemberStatus? @default(ACTIVE)
+  role            Role?         @default(USER)
+  provider        Provider?     @default(LOCAL)
+  providerId      String?
+  pushToken       String?
+  phoneNumber     String?       @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime?     @default(now())
+  updatedAt       DateTime?     @updatedAt
+  deletedAt       DateTime?
 
   tags         MemberTag[]
   languages    MemberLanguage[]
@@ -51,7 +53,6 @@ model GuideProfile {
   temperature         Float?      @default(36.5)
   service             String?
   areas               GuideArea[]
-  phoneNumber         String?     @unique
   verifiedAt          DateTime?
   verifiedID          Boolean?    @default(false)
   verifiedBankAccount Boolean?    @default(false)
