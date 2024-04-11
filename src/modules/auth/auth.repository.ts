@@ -15,15 +15,15 @@ export class AuthRepository {
     this.securityConfig = this.configService.get<SecurityConfig>('security');
   }
 
-  async getAuthCode(phoneNumber: string) {
-    const authCodeKey = `authCode:${phoneNumber}`;
+  async getAuthCode(channel: AuthCodeChannel, key: string) {
+    const authCodeKey = `authCode:${channel}:${key}`;
 
     return this.cacheManager.get<AuthCodePayload>(authCodeKey);
   }
 
-  async cacheAuthCode(cachePayload: AuthCodePayload) {
-    const { phoneNumber } = cachePayload;
-    const authCodeKey = `authCode:${phoneNumber}`;
+  async cacheAuthCode(channel: AuthCodeChannel, cachePayload: AuthCodePayload) {
+    const { key } = cachePayload;
+    const authCodeKey = `authCode:${channel}:${key}`;
     this.cacheManager.set(
       authCodeKey,
       cachePayload,
@@ -31,19 +31,19 @@ export class AuthRepository {
     );
   }
 
-  async resetAuthCode(phoneNumber: string) {
-    const authCodeKey = `authCode:${phoneNumber}`;
+  async resetAuthCode(channel: AuthCodeChannel, key: string) {
+    const authCodeKey = `authCode:${channel}:${key}`;
     this.cacheManager.del(authCodeKey);
   }
 
-  async getAuthCodeSendAttempts(phoneNumber: string) {
-    const attemptsKey = `sendAttempts:${phoneNumber}`;
+  async getAuthCodeSendAttempts(channel: AuthCodeChannel, key: string) {
+    const attemptsKey = `sendAttempts:${channel}:${key}`;
     const attempts = (await this.cacheManager.get<number>(attemptsKey)) || 0;
     return attempts;
   }
 
-  async increaseAuthCodeSendAttempts(phoneNumber: string) {
-    const attemptsKey = `sendAttempts:${phoneNumber}`;
+  async increaseAuthCodeSendAttempts(channel: AuthCodeChannel, key: string) {
+    const attemptsKey = `sendAttempts:${channel}:${key}`;
     const currentValue =
       (await this.cacheManager.get<number>(attemptsKey)) || 0;
     this.cacheManager.set(
@@ -53,19 +53,19 @@ export class AuthRepository {
     );
   }
 
-  async resetAuthCodeSendAttempts(phoneNumber: string) {
-    const attemptsKey = `sendAttempts:${phoneNumber}`;
+  async resetAuthCodeSendAttempts(channel: AuthCodeChannel, key: string) {
+    const attemptsKey = `sendAttempts:${channel}:${key}`;
     this.cacheManager.del(attemptsKey);
   }
 
-  async getAuthCodeValidateAttempts(id: number) {
-    const attemptsKey = `validateAttempts:${id}`;
+  async getAuthCodeValidateAttempts(channel: AuthCodeChannel, id: number) {
+    const attemptsKey = `validateAttempts:${channel}:${id}`;
     const attempts = (await this.cacheManager.get<number>(attemptsKey)) || 0;
     return attempts;
   }
 
-  async increaseAuthCodeValidateAttempts(id: number) {
-    const attemptsKey = `validateAttempts:${id}`;
+  async increaseAuthCodeValidateAttempts(channel: AuthCodeChannel, id: number) {
+    const attemptsKey = `validateAttempts:${channel}:${id}`;
     const currentValue =
       (await this.cacheManager.get<number>(attemptsKey)) || 0;
     this.cacheManager.set(
@@ -75,8 +75,22 @@ export class AuthRepository {
     );
   }
 
-  async resetAuthCodeValidateAttempts(id: number) {
-    const attemptsKey = `validateAttempts:${id}`;
+  async resetAuthCodeValidateAttempts(channel: AuthCodeChannel, id: number) {
+    const attemptsKey = `validateAttempts:${channel}:${id}`;
     this.cacheManager.del(attemptsKey);
+  }
+
+  async setEmailVerified(id: number) {
+    return this.prismaService.member.update({
+      where: { id },
+      data: { emailVerifiedAt: new Date() },
+    });
+  }
+
+  async registerPhoneNumber(id: number, phoneNumber: string) {
+    return this.prismaService.member.update({
+      where: { id },
+      data: { phoneNumber },
+    });
   }
 }

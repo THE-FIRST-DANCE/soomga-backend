@@ -25,7 +25,6 @@ import { Response } from 'express';
 import { UpdateAreasDto } from './dto/update-areas.dto';
 import { UpdateLanguageCertificationsDto } from './dto/update-language-certifications.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
-import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 import { Pagination } from '../../shared/decorators/pagination.decorator';
 import {
   ParseIntArrayPipe,
@@ -285,23 +284,5 @@ export class GuidesController {
     await this.guidesService.leaveGuide(id);
 
     return res.json({ message: '가이드 탈퇴가 완료되었습니다.' });
-  }
-
-  @Post('register/phone-number')
-  @UseGuards(AuthGuideGuard)
-  @ApiOperation({
-    summary: '휴대폰 번호 등록',
-    description: '가이드의 휴대폰 번호를 등록합니다.',
-  })
-  async registerPhoneNumber(
-    @User() user: Member,
-    @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
-    @Res() res: Response,
-  ) {
-    const { id } = user;
-    const { phoneNumber, authCode } = registerPhoneNumberDto;
-    await this.guidesService.registerPhoneNumber(id, phoneNumber, authCode);
-
-    return res.json({ message: '휴대폰 번호가 등록되었습니다.' });
   }
 }

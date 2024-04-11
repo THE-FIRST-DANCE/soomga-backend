@@ -44,5 +44,11 @@ export interface OAuthProfile {
 export interface AuthCodePayload {
   sub: number;
   authCode: string;
-  phoneNumber: string;
+  key: string;
+  value: string;
+}
+
+export enum AuthCodeChannel {
+  SMS = 'sms',
+  EMAIL = 'email',
 }

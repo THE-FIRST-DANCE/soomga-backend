@@ -7,7 +7,6 @@ import {
 import { GuidesRepository } from './guides.repository';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
-import { AuthService } from '../auth/auth.service';
 import { createPageResponse } from '../../shared/pagination/pagination.utils';
 import {
   GuidePaginationOptions,
@@ -19,10 +18,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 
 @Injectable()
 export class GuidesService {
-  constructor(
-    private readonly guidesRepository: GuidesRepository,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly guidesRepository: GuidesRepository) {}
 
   async findAll() {
     return this.guidesRepository.findAll();
@@ -72,21 +68,6 @@ export class GuidesService {
 
   async leaveGuide(id: number) {
     return this.guidesRepository.leaveGuide(id);
-  }
-
-  async registerPhoneNumber(id: number, phoneNumber: string, authCode: string) {
-    await this.checkPhoneNumberValid(phoneNumber);
-
-    await this.authService.validateAuthCode(id, authCode, phoneNumber);
-
-    return this.guidesRepository.registerPhoneNumber(id, phoneNumber);
-  }
-
-  private async checkPhoneNumberValid(phoneNumber: string) {
-    const isExist = await this.guidesRepository.findByPhoneNumber(phoneNumber);
-    if (isExist) {
-      throw new BadRequestException(ErrorMessage.PHONE_NUMBER_ALREADY_EXISTS);
-    }
   }
 
   async paginateReviews(
