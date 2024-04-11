@@ -27,6 +27,7 @@ import { BaseConfig, SecurityConfig } from '../../configs/config.interface';
 import { Member } from '@prisma/client';
 import { SendAuthCodeDto } from './dto/send-authcode.dto';
 import { User } from './auth.decorator';
+import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')

@@ -1,15 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { AuthCodePayload } from '../../interfaces/auth.interface';
+import {
+  AuthCodeChannel,
+  AuthCodePayload,
+} from '../../interfaces/auth.interface';
 
 import { ConfigService } from '@nestjs/config';
 import { SecurityConfig } from 'src/configs/config.interface';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuthRepository {
   securityConfig: SecurityConfig;
   constructor(
     @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
+    private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
   ) {
     this.securityConfig = this.configService.get<SecurityConfig>('security');
