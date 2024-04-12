@@ -41,6 +41,7 @@ model Member {
   chatrooms    ChatroomParticipants[]
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
+  reservations Reservation[]
 
   followers  Follow[] @relation("followerRelation")
   followings Follow[] @relation("followingRelation")
@@ -60,10 +61,13 @@ model GuideProfile {
   member                 Member                       @relation(fields: [id], references: [id], onDelete: Cascade)
   languageCertifications GuideLanguageCertification[]
   reviews                GuideReview[]
+  services               Service[]
+  reservations           Reservation[]
 }
 
 model GuideReview {
   id                 Int       @id @default(autoincrement())
+  reservationId          Int?
   communicationScore Int       @default(5)
   kindnessScore      Int       @default(5)
   locationScore      Int       @default(5)
@@ -71,6 +75,7 @@ model GuideReview {
   createdAt          DateTime? @default(now())
   updatedAt          DateTime? @updatedAt
 
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
   guideId    Int?
   guide      GuideProfile? @relation(fields: [guideId], references: [id], onDelete: Cascade)
   reviewerId Int?
@@ -97,8 +102,8 @@ model Board {
   comments Comment[]
   files    BoardFile[]
 
-  areaId  Int?
-  area    Area? @relation(fields: [areaId], references: [id])
+  areaId Int?
+  area   Area? @relation(fields: [areaId], references: [id])
 
   authorId Int?
   author   Member? @relation(fields: [authorId], references: [id])
@@ -370,6 +375,38 @@ model Follow {
   following   Member @relation("followingRelation", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id        Int       @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  accepted  Boolean   @default(false)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  serviceId Int
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  reviews      GuideReview[]
 }
 
 enum Provider {
