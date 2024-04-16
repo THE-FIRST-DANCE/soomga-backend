@@ -108,6 +108,15 @@ export class GuidesController {
     return this.guidesService.findOne(+id);
   }
 
+  @Get(':guideId/services')
+  @ApiOperation({
+    summary: '가이드 서비스 조회',
+    description: '특정 가이드의 서비스를 조회합니다.',
+  })
+  async getServices(@Param('guideId') guideId: string) {
+    return this.guidesService.getServices(+guideId);
+  }
+
   @Get(':guideId/reviews')
   @ApiOperation({
     summary: '가이드 리뷰 조회',

@@ -154,4 +154,8 @@ export class GuidesService {
 
     return this.guidesRepository.deleteReview(reviewId);
   }
+
+  getServices(guideId: number) {
+    return this.guidesRepository.getServices(guideId);
+  }
 }

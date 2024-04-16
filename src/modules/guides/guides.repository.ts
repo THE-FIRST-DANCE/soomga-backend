@@ -515,4 +515,10 @@ export class GuidesRepository {
       where: { id: reviewId },
     });
   }
+
+  getServices(guideId: number) {
+    return this.prismaService.service.findMany({
+      where: { guideId },
+    });
+  }
 }
