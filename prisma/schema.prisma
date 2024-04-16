@@ -392,7 +392,7 @@ model Reservation {
   id        Int       @id @default(autoincrement())
   startDate DateTime
   endDate   DateTime
-  accepted  Boolean   @default(false)
+  status    ReservationStatus @default(PENDING)
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
   deletedAt DateTime?
@@ -449,4 +449,11 @@ enum BoardType {
   TRIP
   SOS
   NOTICE
+}
+
+enum ReservationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED
 }
