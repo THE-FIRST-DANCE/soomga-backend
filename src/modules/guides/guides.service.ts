@@ -15,6 +15,7 @@ import {
 
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class GuidesService {
@@ -62,8 +63,8 @@ export class GuidesService {
     );
   }
 
-  async updateService(id: number, content: string) {
-    return this.guidesRepository.updateService(id, content);
+  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
+    return this.guidesRepository.updateProfile(id, updateProfileDto);
   }
 
   async leaveGuide(id: number) {

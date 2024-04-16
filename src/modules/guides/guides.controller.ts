@@ -18,7 +18,7 @@ import {
   AuthUserGuard,
 } from '../auth/auth.guard';
 import { GuidesService } from './guides.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import { Gender, Member } from '@prisma/client';
 import { Response } from 'express';
@@ -38,10 +38,10 @@ import {
 } from './guides.interface';
 import { ParseGenderPipe } from './guides.pipe';
 import { GuidePagination } from './guides.decorator';
-import { UpdateServiceDto } from './dto/update-service.dto';
 import { User } from '../auth/auth.decorator';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('가이드 API')
 @Controller('guides')
@@ -256,19 +256,20 @@ export class GuidesController {
     return res.json({ message: '가이드 언어 자격증 정보가 수정되었습니다.' });
   }
 
-  @Put('update/service')
+  @Patch('update')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
-    summary: '가이드 서비스 수정',
-    description: '가이드의 서비스 정보를 수정합니다.',
+    summary: '가이드 프로필 수정',
+    description: '가이드의 프로필 정보를 수정합니다.',
   })
-  async updateService(
+  async updateProfile(
     @User() user: Member,
-    @Body() { content }: UpdateServiceDto,
+    @Body() updateProfileDto: UpdateProfileDto,
     @Res() res: Response,
   ) {
     const { id } = user;
-    await this.guidesService.updateService(id, content);
+    await this.guidesService.updateProfile(id, updateProfileDto);
 
     return res.json({ message: '가이드 서비스 정보가 수정되었습니다.' });
   }

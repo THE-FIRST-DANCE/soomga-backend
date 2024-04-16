@@ -11,6 +11,7 @@ import {
 import { DateHelpers } from 'src/shared/helpers/date.helpers';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class GuidesRepository {
@@ -271,15 +272,13 @@ export class GuidesRepository {
    * @param id - 가이드의 고유 식별자
    */
   async findOne(id: number) {
-    return this.prismaService.member.findUnique({
+    const guide = await this.prismaService.member.findUnique({
       where: { id, role: Role.GUIDE },
       include: {
         guideProfile: {
           include: {
             areas: {
-              select: {
-                area: true,
-              },
+              select: { area: true },
             },
             languageCertifications: {
               select: {
@@ -429,10 +428,10 @@ export class GuidesRepository {
     });
   }
 
-  async updateService(id: number, content: string) {
+  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
     return this.prismaService.guideProfile.update({
       where: { id },
-      data: { service: content },
+      data: updateProfileDto,
     });
   }
 
