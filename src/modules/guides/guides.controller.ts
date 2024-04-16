@@ -50,6 +50,7 @@ export class GuidesController {
 
   @Get()
   @UseGuards(AuthAdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: '가이드 목록 조회',
     description: '모든 가이드의 정보를 조회합니다.',
@@ -122,6 +123,7 @@ export class GuidesController {
   }
 
   @Post(':guideId/reviews')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 리뷰 작성',
@@ -145,6 +147,7 @@ export class GuidesController {
   }
 
   @Patch('reviews/:reviewId')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 리뷰 수정',
@@ -168,6 +171,7 @@ export class GuidesController {
   }
 
   @Delete('reviews/:reviewId')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 리뷰 삭제',
@@ -186,6 +190,7 @@ export class GuidesController {
   }
 
   @Post('register')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 등록',
@@ -203,6 +208,7 @@ export class GuidesController {
   }
 
   @Put('update/areas')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 활동지역 수정',
@@ -220,6 +226,7 @@ export class GuidesController {
   }
 
   @Put('update/languages')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 언어 수정',
@@ -237,6 +244,7 @@ export class GuidesController {
   }
 
   @Put('update/language-certifications')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 언어 자격증 수정',
@@ -275,6 +283,7 @@ export class GuidesController {
   }
 
   @Post('leave')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 탈퇴',
