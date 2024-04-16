@@ -28,6 +28,7 @@ import { envValidateSchema } from 'src/configs/env-validate.schema';
 import { AreasModule } from '../areas/areas.module';
 import { MypageModule } from '../mypage/mypage.module';
 import { ServicesModule } from '../services/services.module';
+import { ReservationsModule } from '../reservations/reservations.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ServicesModule } from '../services/services.module';
     HealthModule,
     ChatModule,
     ServicesModule,
+    ReservationsModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
