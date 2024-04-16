@@ -27,6 +27,7 @@ import { UploadsModule } from '../uploads/uploads.module';
 import { envValidateSchema } from 'src/configs/env-validate.schema';
 import { AreasModule } from '../areas/areas.module';
 import { MypageModule } from '../mypage/mypage.module';
+import { ServicesModule } from '../services/services.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { MypageModule } from '../mypage/mypage.module';
     CoolsmsModule,
     HealthModule,
     ChatModule,
+    ServicesModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
