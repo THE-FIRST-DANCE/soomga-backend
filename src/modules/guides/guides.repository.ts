@@ -272,7 +272,7 @@ export class GuidesRepository {
    * @param id - 가이드의 고유 식별자
    */
   async findOne(id: number) {
-    const guide = await this.prismaService.member.findUnique({
+    return this.prismaService.member.findUnique({
       where: { id, role: Role.GUIDE },
       include: {
         guideProfile: {
@@ -476,6 +476,7 @@ export class GuidesRepository {
       take: limit,
       orderBy: { id: 'desc' },
       include: {
+        reviewer: true,
         guide: {
           include: { member: true },
         },
@@ -518,6 +519,12 @@ export class GuidesRepository {
 
   getServices(guideId: number) {
     return this.prismaService.service.findMany({
+      where: { guideId },
+    });
+  }
+
+  getReservations(guideId: number) {
+    return this.prismaService.reservation.findMany({
       where: { guideId },
     });
   }

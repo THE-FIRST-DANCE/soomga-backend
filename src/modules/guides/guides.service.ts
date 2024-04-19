@@ -158,4 +158,8 @@ export class GuidesService {
   getServices(guideId: number) {
     return this.guidesRepository.getServices(guideId);
   }
+
+  getReservations(guideId: number) {
+    return this.guidesRepository.getReservations(guideId);
+  }
 }

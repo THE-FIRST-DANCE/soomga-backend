@@ -131,6 +131,15 @@ export class GuidesController {
     return this.guidesService.getReviews(+guideId, cursor, limit);
   }
 
+  @Get(':guideId/reservations')
+  @ApiOperation({
+    summary: '가이드 예약 조회',
+    description: '가이드의 예약를 조회합니다.',
+  })
+  async getReservations(@Param('guideId') guideId: string) {
+    return this.guidesService.getReservations(+guideId);
+  }
+
   @Post(':guideId/reviews')
   @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
