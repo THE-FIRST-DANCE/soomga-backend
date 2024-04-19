@@ -11,6 +11,7 @@ export class ReservationsRepository {
   findReservation(reservationId: number) {
     return this.prismaService.reservation.findUnique({
       where: { id: reservationId },
+      include: { service: true },
     });
   }
 
@@ -20,6 +21,7 @@ export class ReservationsRepository {
         guideId,
         ...reserveServiceDto,
       },
+      include: { service: true },
     });
   }
 
@@ -30,6 +32,7 @@ export class ReservationsRepository {
     return this.prismaService.reservation.update({
       where: { id: reservationId },
       data: updateReservationDto,
+      include: { service: true },
     });
   }
 
@@ -37,6 +40,7 @@ export class ReservationsRepository {
     return this.prismaService.reservation.update({
       where: { id: reservationId },
       data: { status },
+      include: { service: true },
     });
   }
 }

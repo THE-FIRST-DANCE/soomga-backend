@@ -5,6 +5,7 @@ import {
   UseGuards,
   Patch,
   Param,
+  Query,
 } from '@nestjs/common';
 import { AuthGuideGuard, AuthMemberGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -19,7 +20,7 @@ import { ReservationsService } from './reservations.service';
 export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 
-  @Post('reservation')
+  @Post()
   @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
@@ -29,12 +30,21 @@ export class ReservationsController {
   async reserveService(
     @User() user: Member,
     @Body() reserveServiceDto: CreateReservationDto,
+    @Query('roomId') roomId?: string,
   ) {
     const { id: guideId } = user;
-    return this.reservationsService.reserveService(guideId, reserveServiceDto);
+    const options = {
+      roomId,
+    };
+
+    return this.reservationsService.reserveService(
+      guideId,
+      reserveServiceDto,
+      options,
+    );
   }
 
-  @Patch('reservation/:reservationId')
+  @Patch(':reservationId')
   @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
@@ -54,7 +64,7 @@ export class ReservationsController {
     );
   }
 
-  @Post('reservation/:reservationId/accept')
+  @Patch(':reservationId/accept')
   @ApiBearerAuth()
   @UseGuards(AuthMemberGuard)
   @ApiOperation({
@@ -64,12 +74,17 @@ export class ReservationsController {
   async acceptReservation(
     @User() user: Member,
     @Param('reservationId') reservationId: string,
+    @Query('roomId') roomId?: string,
   ) {
     const { id: memberId } = user;
-    return this.reservationsService.acceptReservation(memberId, +reservationId);
+    return this.reservationsService.acceptReservation(
+      memberId,
+      +reservationId,
+      { roomId },
+    );
   }
 
-  @Post('reservation/:reservationId/reject')
+  @Patch(':reservationId/reject')
   @ApiBearerAuth()
   @UseGuards(AuthMemberGuard)
   @ApiOperation({
@@ -79,12 +94,17 @@ export class ReservationsController {
   async rejectReservation(
     @User() user: Member,
     @Param('reservationId') reservationId: string,
+    @Query('roomId') roomId?: string,
   ) {
     const { id: memberId } = user;
-    return this.reservationsService.rejectReservation(memberId, +reservationId);
+    return this.reservationsService.rejectReservation(
+      memberId,
+      +reservationId,
+      { roomId },
+    );
   }
 
-  @Post('reservation/:reservationId/cancel')
+  @Patch(':reservationId/cancel')
   @ApiBearerAuth()
   @UseGuards(AuthMemberGuard)
   @ApiOperation({
