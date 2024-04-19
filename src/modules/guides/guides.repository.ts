@@ -11,6 +11,7 @@ import {
 import { DateHelpers } from 'src/shared/helpers/date.helpers';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class GuidesRepository {
@@ -277,9 +278,7 @@ export class GuidesRepository {
         guideProfile: {
           include: {
             areas: {
-              select: {
-                area: true,
-              },
+              select: { area: true },
             },
             languageCertifications: {
               select: {
@@ -429,10 +428,10 @@ export class GuidesRepository {
     });
   }
 
-  async updateService(id: number, content: string) {
+  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
     return this.prismaService.guideProfile.update({
       where: { id },
-      data: { service: content },
+      data: updateProfileDto,
     });
   }
 
@@ -477,6 +476,7 @@ export class GuidesRepository {
       take: limit,
       orderBy: { id: 'desc' },
       include: {
+        reviewer: true,
         guide: {
           include: { member: true },
         },
@@ -514,6 +514,18 @@ export class GuidesRepository {
   deleteReview(reviewId: number) {
     return this.prismaService.guideReview.delete({
       where: { id: reviewId },
+    });
+  }
+
+  getServices(guideId: number) {
+    return this.prismaService.service.findMany({
+      where: { guideId },
+    });
+  }
+
+  getReservations(guideId: number) {
+    return this.prismaService.reservation.findMany({
+      where: { guideId },
     });
   }
 }

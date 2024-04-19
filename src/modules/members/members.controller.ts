@@ -129,4 +129,13 @@ export class MembersController {
         : '언팔로우가 완료되었습니다.',
     });
   }
+
+  @Get(':id/reservations')
+  @ApiOperation({
+    summary: '예약 조회',
+    description: '멤버의 예약를 조회합니다.',
+  })
+  async getReservations(@Param('id') id: string) {
+    return this.membersService.getReservations(+id);
+  }
 }

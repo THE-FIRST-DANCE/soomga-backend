@@ -82,4 +82,8 @@ export class MembersService {
   findByPhoneNumber(phoneNumber: string) {
     return this.membersRepository.findByPhoneNumber(phoneNumber);
   }
+
+  getReservations(id: number) {
+    return this.membersRepository.getReservations(id);
+  }
 }

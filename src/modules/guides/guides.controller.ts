@@ -18,7 +18,7 @@ import {
   AuthUserGuard,
 } from '../auth/auth.guard';
 import { GuidesService } from './guides.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import { Gender, Member } from '@prisma/client';
 import { Response } from 'express';
@@ -38,10 +38,10 @@ import {
 } from './guides.interface';
 import { ParseGenderPipe } from './guides.pipe';
 import { GuidePagination } from './guides.decorator';
-import { UpdateServiceDto } from './dto/update-service.dto';
 import { User } from '../auth/auth.decorator';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('가이드 API')
 @Controller('guides')
@@ -50,6 +50,7 @@ export class GuidesController {
 
   @Get()
   @UseGuards(AuthAdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: '가이드 목록 조회',
     description: '모든 가이드의 정보를 조회합니다.',
@@ -107,6 +108,15 @@ export class GuidesController {
     return this.guidesService.findOne(+id);
   }
 
+  @Get(':guideId/services')
+  @ApiOperation({
+    summary: '가이드 서비스 조회',
+    description: '특정 가이드의 서비스를 조회합니다.',
+  })
+  async getServices(@Param('guideId') guideId: string) {
+    return this.guidesService.getServices(+guideId);
+  }
+
   @Get(':guideId/reviews')
   @ApiOperation({
     summary: '가이드 리뷰 조회',
@@ -121,7 +131,17 @@ export class GuidesController {
     return this.guidesService.getReviews(+guideId, cursor, limit);
   }
 
+  @Get(':guideId/reservations')
+  @ApiOperation({
+    summary: '가이드 예약 조회',
+    description: '가이드의 예약를 조회합니다.',
+  })
+  async getReservations(@Param('guideId') guideId: string) {
+    return this.guidesService.getReservations(+guideId);
+  }
+
   @Post(':guideId/reviews')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 리뷰 작성',
@@ -145,6 +165,7 @@ export class GuidesController {
   }
 
   @Patch('reviews/:reviewId')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 리뷰 수정',
@@ -168,6 +189,7 @@ export class GuidesController {
   }
 
   @Delete('reviews/:reviewId')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 리뷰 삭제',
@@ -186,6 +208,7 @@ export class GuidesController {
   }
 
   @Post('register')
+  @ApiBearerAuth()
   @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '가이드 등록',
@@ -203,6 +226,7 @@ export class GuidesController {
   }
 
   @Put('update/areas')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 활동지역 수정',
@@ -220,6 +244,7 @@ export class GuidesController {
   }
 
   @Put('update/languages')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 언어 수정',
@@ -237,6 +262,7 @@ export class GuidesController {
   }
 
   @Put('update/language-certifications')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 언어 자격증 수정',
@@ -256,24 +282,26 @@ export class GuidesController {
     return res.json({ message: '가이드 언어 자격증 정보가 수정되었습니다.' });
   }
 
-  @Put('update/service')
+  @Patch('update')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
-    summary: '가이드 서비스 수정',
-    description: '가이드의 서비스 정보를 수정합니다.',
+    summary: '가이드 프로필 수정',
+    description: '가이드의 프로필 정보를 수정합니다.',
   })
-  async updateService(
+  async updateProfile(
     @User() user: Member,
-    @Body() { content }: UpdateServiceDto,
+    @Body() updateProfileDto: UpdateProfileDto,
     @Res() res: Response,
   ) {
     const { id } = user;
-    await this.guidesService.updateService(id, content);
+    await this.guidesService.updateProfile(id, updateProfileDto);
 
     return res.json({ message: '가이드 서비스 정보가 수정되었습니다.' });
   }
 
   @Post('leave')
+  @ApiBearerAuth()
   @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '가이드 탈퇴',

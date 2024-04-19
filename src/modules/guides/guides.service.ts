@@ -15,6 +15,7 @@ import {
 
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class GuidesService {
@@ -62,8 +63,8 @@ export class GuidesService {
     );
   }
 
-  async updateService(id: number, content: string) {
-    return this.guidesRepository.updateService(id, content);
+  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
+    return this.guidesRepository.updateProfile(id, updateProfileDto);
   }
 
   async leaveGuide(id: number) {
@@ -152,5 +153,13 @@ export class GuidesService {
     }
 
     return this.guidesRepository.deleteReview(reviewId);
+  }
+
+  getServices(guideId: number) {
+    return this.guidesRepository.getServices(guideId);
+  }
+
+  getReservations(guideId: number) {
+    return this.guidesRepository.getReservations(guideId);
   }
 }
