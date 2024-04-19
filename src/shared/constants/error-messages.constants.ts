@@ -16,6 +16,8 @@ enum ErrorMessage {
   INVALID_AUTH_CODE = '인증코드가 일치하지 않습니다.',
   TOO_MANY_ATTEMPTS = '인증코드 요청 횟수를 초과하였습니다.',
   NOTFOUND_RESERVATION = '예약을 찾을 수 없습니다.',
+  NOTFOUND_ROOM = '채팅방을 찾을 수 없습니다.',
+  NOTFOUND_MESSAGE = '메시지를 찾을 수 없습니다.',
 }
 
 export default ErrorMessage;
