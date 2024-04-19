@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ChatRepository } from './chat.repository';
@@ -8,15 +8,22 @@ import { AuthModule } from '../auth/auth.module';
 import { AuthRepository } from '../auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
 
+@Global()
 @Module({
   imports: [PrismaModule, AuthModule],
   providers: [
     ChatService,
     ChatRepository,
     ChatGateway,
+    {
+      provide: 'IO_SERVER',
+      useFactory: (gateway: ChatGateway) => gateway.server,
+      inject: [ChatGateway],
+    },
     AuthRepository,
     JwtService,
   ],
   controllers: [ChatController],
+  exports: [ChatService, 'IO_SERVER'],
 })
 export class ChatModule {}

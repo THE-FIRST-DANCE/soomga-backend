@@ -1,9 +1,12 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Cache } from 'cache-manager';
-import { Message } from '../../interfaces/chat.interface';
+import { Content, Message } from '../../interfaces/chat.interface';
 import { ConfigService } from '@nestjs/config';
 import { CacheConfig } from '../../configs/config.interface';
+import { UpdateRoomDto } from './dto/update-room.dto';
+import ErrorMessage from 'src/shared/constants/error-messages.constants';
+import { Reservation } from '@prisma/client';
 
 export class ChatRepository {
   cacheConfig: CacheConfig;
@@ -27,10 +30,24 @@ export class ChatRepository {
       include: {
         members: {
           select: {
-            memberId: true,
+            member: {
+              select: {
+                id: true,
+                nickname: true,
+                avatar: true,
+              },
+            },
           },
         },
       },
+    });
+
+    // 1:1 채팅방의 이름을 상대방 닉네임으로 변경
+    rooms.map((room) => {
+      if (room.members.length === 2) {
+        const other = room.members.find((member) => member.member.id !== id);
+        room.name = other.member.nickname;
+      }
     });
 
     return rooms;
@@ -41,6 +58,14 @@ export class ChatRepository {
       where: {
         id,
       },
+      include: { members: true },
+    });
+  }
+
+  async updateRoom(id: string, updateRoomDto: UpdateRoomDto) {
+    return this.prismaService.chatroom.update({
+      where: { id },
+      data: updateRoomDto,
     });
   }
 
@@ -199,7 +224,7 @@ export class ChatRepository {
         memberId: message.sender.id,
         content: {
           message: message.content.message,
-          extra: message.content.extra,
+          extra: message.content.extra.toString(),
         },
         createdAt: new Date(message.createdAt),
       })),
@@ -282,5 +307,25 @@ export class ChatRepository {
       index,
       this.cacheConfig.chat.ttl,
     );
+  }
+
+  async updateReservationMessage(roomId: string, reservation: Reservation) {
+    const roomKey = `chatroom:${roomId}`;
+    const messages = await this.cacheManager.get<Message[]>(roomKey);
+
+    const targetIndex = messages.findIndex((message) => {
+      if (
+        message.content.extra &&
+        message.content.extra.type === 'reservation'
+      ) {
+        return message.content.extra.data.id === reservation.id;
+      }
+    });
+    if (targetIndex === -1) {
+      throw new NotFoundException(ErrorMessage.NOTFOUND_MESSAGE);
+    }
+
+    messages[targetIndex].content.extra.data = reservation;
+    await this.cacheManager.set(roomKey, messages, this.cacheConfig.chat.ttl);
   }
 }
