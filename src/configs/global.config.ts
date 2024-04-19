@@ -5,6 +5,7 @@ import * as process from 'process';
 export const GLOBAL_CONFIG: Config = {
   nest: {
     port: process.env.APP_PORT || 3000,
+    name: process.env.APP_NAME || 'Soomga',
   },
   cors: {
     enabled: true,
