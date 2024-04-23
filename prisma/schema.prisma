@@ -7,10 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "soomga-erd.svg"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "soomga-erd.svg"
+// }
 
 model Member {
   id              Int           @id @default(autoincrement())
