@@ -7,11 +7,11 @@ import { Strategy } from 'passport-line';
 
 @Injectable()
 export class LineStrategy extends PassportStrategy(Strategy, 'line') {
-  constructor(private readonly configService: ConfigService) {
+  constructor(readonly configService: ConfigService) {
     super({
       channelID: configService.get<string>('LINE_CHANNEL_ID'),
       channelSecret: configService.get<string>('LINE_CHANNEL_SECRET'),
-      callbackURL: '/auth/line/callback',
+      callbackURL: '/api/auth/line/callback',
     });
   }
 

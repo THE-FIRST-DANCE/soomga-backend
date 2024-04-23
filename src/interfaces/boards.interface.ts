@@ -11,5 +11,5 @@ export interface BoardsRepositoryInterface {
 
   update(id: number, updateBoardDto: UpdateBoardDto): Promise<Board>;
 
-  remove(id: number): Promise<void>;
+  remove(id: number): Promise<Board>;
 }

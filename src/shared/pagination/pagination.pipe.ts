@@ -37,6 +37,16 @@ export class ParseIntArrayPipe implements PipeTransform {
     if (!value) {
       return value;
     }
-    return value.split(' ').map(Number);
+    return value.split(',').map(Number);
+  }
+}
+
+@Injectable()
+export class ParseStringArrayPipe implements PipeTransform {
+  transform(value: string | undefined) {
+    if (!value) {
+      return value;
+    }
+    return value.split(',');
   }
 }

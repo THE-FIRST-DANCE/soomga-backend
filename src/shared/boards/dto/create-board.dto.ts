@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BoardType, Prisma } from '@prisma/client';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateBoardDto implements Prisma.BoardCreateInput {
   @ApiProperty()
@@ -18,9 +18,14 @@ export class CreateBoardDto implements Prisma.BoardCreateInput {
   content?: string;
 
   @ApiProperty({ required: false })
-  @IsString()
   @IsOptional()
-  address?: string;
+  @IsNumber()
+  lat?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  lng?: number;
 
   @ApiProperty({ enum: BoardType, required: false })
   @IsEnum(BoardType)

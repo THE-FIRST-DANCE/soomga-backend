@@ -36,7 +36,7 @@ export class MembersService {
     return this.membersRepository.remove(id);
   }
 
-  async findMemberByEmail(email: string) {
+  async findByEmail(email: string) {
     return this.membersRepository.findByEmail(email);
   }
 
@@ -62,5 +62,28 @@ export class MembersService {
 
   async comeback(id: number) {
     return this.membersRepository.comeback(id);
+  }
+
+  async followToggle(followingId: number, followerId: number) {
+    const isFollowing = await this.membersRepository.isFollowing(
+      followingId,
+      followerId,
+    );
+
+    if (isFollowing) {
+      await this.membersRepository.unfollow(followingId, followerId);
+    } else {
+      await this.membersRepository.follow(followingId, followerId);
+    }
+
+    return !isFollowing;
+  }
+
+  findByPhoneNumber(phoneNumber: string) {
+    return this.membersRepository.findByPhoneNumber(phoneNumber);
+  }
+
+  getReservations(id: number) {
+    return this.membersRepository.getReservations(id);
   }
 }

@@ -8,13 +8,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthGoogleGuard,
+  AuthGoogleMobileGuard,
   AuthJwtRefreshGuard,
   AuthLineGuard,
+  AuthLineMobileGuard,
   AuthMemberGuard,
 } from './auth.guard';
 import { AuthService } from './auth.service';
@@ -25,6 +27,7 @@ import { BaseConfig, SecurityConfig } from '../../configs/config.interface';
 import { Member } from '@prisma/client';
 import { SendAuthCodeDto } from './dto/send-authcode.dto';
 import { User } from './auth.decorator';
+import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
@@ -96,11 +99,12 @@ export class AuthController {
     });
   }
 
-  @Post('auth-code')
+  @Post('auth-code/phone')
   @UseGuards(AuthMemberGuard)
+  @ApiBearerAuth()
   @ApiOperation({
-    summary: '인증코드 발송',
-    description: '가이드에게 인증코드를 발송합니다.',
+    summary: '휴대폰 인증코드 발송',
+    description: '사용자에게 인증코드를 발송합니다.',
   })
   async sendAuthCode(
     @User() user: Member,
@@ -109,7 +113,7 @@ export class AuthController {
   ) {
     const { id } = user;
 
-    await this.authService.sendAuthCode(id, phoneNumber);
+    await this.authService.sendPhoneAuthCode(id, phoneNumber);
 
     return res.json({ message: '인증코드가 발송되었습니다.' });
   }
@@ -119,9 +123,17 @@ export class AuthController {
   @UseGuards(AuthGoogleGuard)
   async googleLogin() {}
 
+  @Get('google/mobile')
+  @UseGuards(AuthGoogleMobileGuard)
+  async googleMobileLogin() {}
+
   @Get('line')
   @UseGuards(AuthLineGuard)
   async lineLogin() {}
+
+  @Get('line/mobile')
+  @UseGuards(AuthLineMobileGuard)
+  async lineMobileLogin() {}
 
   @Get('google/callback')
   @UseGuards(AuthGoogleGuard)
@@ -134,7 +146,7 @@ export class AuthController {
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.redirect(`${this.base.frontendUrl}/redirect`);
+    return res.redirect(`${this.base.loadBalancerUrl}/redirect`);
   }
 
   @Get('line/callback')
@@ -148,7 +160,35 @@ export class AuthController {
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.redirect(`${this.base.frontendUrl}/redirect`);
+    return res.redirect(`${this.base.loadBalancerUrl}/redirect`);
+  }
+
+  @Get('google/mobile/callback')
+  @UseGuards(AuthGoogleMobileGuard)
+  async googleMobileAuthRedirect(
+    @Req() req: Request & { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.authService.signInWithOAuth(req.user);
+
+    return res.redirect(
+      `${this.base.mobileUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
+  }
+
+  @Get('line/mobile/callback')
+  @UseGuards(AuthLineMobileGuard)
+  async lineMobileAuthRedirect(
+    @Req() req: Request & { user: OAuthProfile },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.authService.signInWithOAuth(req.user);
+
+    return res.redirect(
+      `${this.base.mobileUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
   }
 
   @UseGuards(AuthJwtRefreshGuard)
@@ -161,6 +201,24 @@ export class AuthController {
     });
 
     res.json({ message: 'accessToken 재발급 완료' });
+  }
+
+  @Post('register/phone-number')
+  @UseGuards(AuthMemberGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: '휴대폰 번호 등록',
+    description: '휴대폰 번호를 등록합니다.',
+  })
+  async registerPhoneNumber(
+    @User() user: Member,
+    @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
+    @Res() res: Response,
+  ) {
+    const { id } = user;
+    await this.authService.registerPhoneNumber(id, registerPhoneNumberDto);
+
+    return res.json({ message: '휴대폰 번호가 등록되었습니다.' });
   }
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {

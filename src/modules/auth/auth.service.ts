@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MembersService } from '../members/members.service';
 import { SignInDto } from './dto/sign-in.dto';
@@ -11,12 +16,16 @@ import { Member } from '@prisma/client';
 import { CoolsmsService } from '../coolsms/coolsms.service';
 import { AuthRepository } from './auth.repository';
 import { ConfigService } from '@nestjs/config';
+import { AuthCodeChannel } from '../../interfaces/auth.interface';
+import { randomUUID } from 'crypto';
+import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 
 const AUTH_CODE_MAX_ATTEMPTS = 5;
 @Injectable()
 export class AuthService {
   accessTokenExpiresIn: number;
   refreshTokenExpiresIn: number;
+  authCodeMaxAttempts: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -28,10 +37,11 @@ export class AuthService {
     const securityConfig = this.configService.get('security');
     this.accessTokenExpiresIn = securityConfig.accessTokenExpiresIn;
     this.refreshTokenExpiresIn = securityConfig.refreshTokenExpiresIn;
+    this.authCodeMaxAttempts = securityConfig.authCodeMaxAttempts;
   }
 
   async signIn(signInDto: SignInDto) {
-    const member = await this.membersService.findMemberByEmail(signInDto.email);
+    const member = await this.membersService.findByEmail(signInDto.email);
     if (
       !member ||
       !(await AuthHelpers.verify(signInDto.password, member.password))
@@ -66,35 +76,57 @@ export class AuthService {
     return this.generateTokens(member);
   }
 
-  async sendAuthCode(memberId: number, phoneNumber: string) {
-    const attempts =
-      await this.authRepository.getAuthCodeSendAttempts(phoneNumber);
+  async sendPhoneAuthCode(memberId: number, phoneNumber: string) {
+    const attempts = await this.authRepository.getAuthCodeSendAttempts(
+      AuthCodeChannel.SMS,
+      phoneNumber,
+    );
     if (attempts >= AUTH_CODE_MAX_ATTEMPTS) {
       throw new UnauthorizedException(ErrorMessage.TOO_MANY_ATTEMPTS);
     }
 
     const authCode = AuthHelpers.generateAuthCode();
 
+    const key = randomUUID();
+
     const authCodePayload: AuthCodePayload = {
+      key,
+      value: phoneNumber,
       sub: memberId,
       authCode,
-      phoneNumber,
     };
     await this.coolsmsService.sendAuthCode(phoneNumber, authCode);
-    await this.authRepository.increaseAuthCodeSendAttempts(phoneNumber);
-    await this.authRepository.cacheAuthCode(authCodePayload);
+    await this.authRepository.increaseAuthCodeSendAttempts(
+      AuthCodeChannel.SMS,
+      phoneNumber,
+    );
+    await this.authRepository.cacheAuthCode(
+      AuthCodeChannel.SMS,
+      authCodePayload,
+    );
 
     return authCode;
   }
 
-  async validateAuthCode(id: number, authCode: string, phoneNumber: string) {
-    const attempts = await this.authRepository.getAuthCodeValidateAttempts(id);
+  async validateAuthCode(
+    id: number,
+    authCode: string,
+    channel: AuthCodeChannel,
+    phoneNumber: string,
+  ) {
+    const attempts = await this.authRepository.getAuthCodeValidateAttempts(
+      channel,
+      id,
+    );
     if (attempts >= AUTH_CODE_MAX_ATTEMPTS) {
       throw new UnauthorizedException(ErrorMessage.TOO_MANY_ATTEMPTS);
     }
-    await this.authRepository.increaseAuthCodeValidateAttempts(id);
+    await this.authRepository.increaseAuthCodeValidateAttempts(channel, id);
 
-    const authCodeCache = await this.authRepository.getAuthCode(phoneNumber);
+    const authCodeCache = await this.authRepository.getAuthCode(
+      channel,
+      phoneNumber,
+    );
     if (
       !authCodeCache ||
       authCodeCache.sub !== id ||
@@ -102,8 +134,8 @@ export class AuthService {
     ) {
       throw new UnauthorizedException(ErrorMessage.INVALID_AUTH_CODE);
     }
-    await this.authRepository.resetAuthCode(phoneNumber);
-    await this.authRepository.resetAuthCodeValidateAttempts(id);
+    await this.authRepository.resetAuthCode(channel, phoneNumber);
+    await this.authRepository.resetAuthCodeValidateAttempts(channel, id);
   }
 
   async restoreAccessToken(member: Member) {
@@ -133,5 +165,24 @@ export class AuthService {
       expiresIn: this.refreshTokenExpiresIn,
     });
     return { user: payload, accessToken, refreshToken };
+  }
+
+  async registerPhoneNumber(
+    id: number,
+    registerPhoneNumberDto: RegisterPhoneNumberDto,
+  ) {
+    const { phoneNumber, authCode } = registerPhoneNumberDto;
+
+    await this.checkPhoneNumberValid(phoneNumber);
+    await this.validateAuthCode(id, authCode, AuthCodeChannel.SMS, phoneNumber);
+
+    return this.authRepository.registerPhoneNumber(id, phoneNumber);
+  }
+
+  private async checkPhoneNumberValid(phoneNumber: string) {
+    const isExist = await this.membersService.findByPhoneNumber(phoneNumber);
+    if (isExist) {
+      throw new BadRequestException(ErrorMessage.PHONE_NUMBER_ALREADY_EXISTS);
+    }
   }
 }

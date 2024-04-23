@@ -7,31 +7,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "soomga-erd.svg"
+}
+
 model Member {
-  id         Int           @id @default(autoincrement())
-  email      String?       @unique
-  nickname   String
-  password   String
-  avatar     String?
-  birthdate  DateTime?     @default(now())
-  gender     Gender?
-  status     MemberStatus? @default(ACTIVE)
-  role       Role?         @default(USER)
-  provider   Provider?     @default(LOCAL)
-  providerId String?
-  createdAt  DateTime?     @default(now())
-  updatedAt  DateTime?     @updatedAt
-  deletedAt  DateTime?
+  id              Int           @id @default(autoincrement())
+  email           String?       @unique
+  nickname        String
+  password        String
+  avatar          String?
+  birthdate       DateTime?     @default(now())
+  gender          Gender?
+  status          MemberStatus? @default(ACTIVE)
+  role            Role?         @default(USER)
+  provider        Provider?     @default(LOCAL)
+  providerId      String?
+  pushToken       String?
+  phoneNumber     String?       @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime?     @default(now())
+  updatedAt       DateTime?     @updatedAt
+  deletedAt       DateTime?
 
   tags         MemberTag[]
   languages    MemberLanguage[]
   boards       Board[]
+  comments     Comment[]
   boardLikes   BoardLike[]
   plans        Plan[]
   schedules    MemberEvent[]
   chatrooms    ChatroomParticipants[]
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
+  reservations Reservation[]
+
+  followers  Follow[] @relation("followerRelation")
+  followings Follow[] @relation("followingRelation")
 
   guideProfile GuideProfile?
 }
@@ -41,7 +54,6 @@ model GuideProfile {
   temperature         Float?      @default(36.5)
   service             String?
   areas               GuideArea[]
-  phoneNumber         String?     @unique
   verifiedAt          DateTime?
   verifiedID          Boolean?    @default(false)
   verifiedBankAccount Boolean?    @default(false)
@@ -49,10 +61,13 @@ model GuideProfile {
   member                 Member                       @relation(fields: [id], references: [id], onDelete: Cascade)
   languageCertifications GuideLanguageCertification[]
   reviews                GuideReview[]
+  services               Service[]
+  reservations           Reservation[]
 }
 
 model GuideReview {
   id                 Int       @id @default(autoincrement())
+  reservationId          Int?
   communicationScore Int       @default(5)
   kindnessScore      Int       @default(5)
   locationScore      Int       @default(5)
@@ -60,6 +75,7 @@ model GuideReview {
   createdAt          DateTime? @default(now())
   updatedAt          DateTime? @updatedAt
 
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
   guideId    Int?
   guide      GuideProfile? @relation(fields: [guideId], references: [id], onDelete: Cascade)
   reviewerId Int?
@@ -67,34 +83,55 @@ model GuideReview {
 }
 
 model Board {
-  id        Int          @id @default(autoincrement())
-  title     String
+  id        Int           @id @default(autoincrement())
+  title     String?
+  url       String?       @unique @default(uuid())
   overview  String?
   content   String?
-  address   String?
-  type      BoardType?   @default(TRIP)
+  lat       Float?
+  lng       Float?
+  type      BoardType?    @default(TRIP)
   status    AccessStatus? @default(PUBLIC)
-  createdAt DateTime?    @default(now())
-  updatedAt DateTime?    @updatedAt
+  process   BoardStatus?  @default(ACTIVE)
+  createdAt DateTime?     @default(now())
+  updatedAt DateTime?     @updatedAt
   deletedAt DateTime?
 
-  tags  BoardTag[]
-  likes BoardLike[]
+  tags     BoardTag[]
+  likes    BoardLike[]
+  comments Comment[]
+  files    BoardFile[]
+
+  areaId Int?
+  area   Area? @relation(fields: [areaId], references: [id])
 
   authorId Int?
   author   Member? @relation(fields: [authorId], references: [id])
 }
 
-model BoardLike {
-  createdAt DateTime? @default(now())
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   boardId Int
   board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
 
-  @@unique([boardId, memberId])
+model BoardLike {
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime? @default(now())
+
+  @@id([boardId, memberId])
 }
 
 model Tag {
@@ -112,7 +149,7 @@ model MemberTag {
   tagId Int
   tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@unique([memberId, tagId])
+  @@id([memberId, tagId])
 }
 
 model BoardTag {
@@ -122,7 +159,7 @@ model BoardTag {
   tagId Int
   tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@unique([boardId, tagId])
+  @@id([boardId, tagId])
 }
 
 model Language {
@@ -140,7 +177,7 @@ model MemberLanguage {
   languageId Int
   language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
 
-  @@unique([memberId, languageId])
+  @@id([memberId, languageId])
 }
 
 model LanguageCertification {
@@ -160,40 +197,40 @@ model GuideLanguageCertification {
   languageCertificationId Int
   languageCertification   LanguageCertification @relation(fields: [languageCertificationId], references: [id], onDelete: Cascade)
 
-  @@unique([guideId, languageCertificationId])
+  @@id([guideId, languageCertificationId])
 }
 
 model Plan {
-  id        Int         @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   title     String
   status    AccessStatus @default(PUBLIC)
   region    String
   transport String
   period    Int
-  createdAt DateTime?   @default(now())
-  updatedAt DateTime?   @updatedAt
+  createdAt DateTime?    @default(now())
+  updatedAt DateTime?    @updatedAt
   deletedAt DateTime?
 
-  memberEvents   MemberEvent[]
-  daySchedules   DaySchedule[]
+  memberEvents MemberEvent[]
+  daySchedules DaySchedule[]
 
   authorId Int
   author   Member @relation(fields: [authorId], references: [id])
 }
 
 model DaySchedule {
-  id        Int       @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   day       Int
   schedules Schedule[]
 
-  planId    Int      
-  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Schedule {
-  id            Int      @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   placeId       Int
-  item          Place    @relation(fields: [placeId], references: [id])
+  item          Place   @relation(fields: [placeId], references: [id])
   nextLat       Float?
   nextLng       Float?
   nextPlaceId   Int?
@@ -202,7 +239,7 @@ model Schedule {
   stayTime      String?
 
   dayScheduleId Int
-  daySchedule DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade )
+  daySchedule   DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade)
 }
 
 model Place {
@@ -232,23 +269,23 @@ model OpeningHours {
   openTime  String
   closeTime String
 
-  placeId   Int
-  place     Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  placeId Int
+  place   Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
 model MemberEvent {
-  id          Int @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   start       DateTime
   end         DateTime
   allDay      Boolean? @default(false)
   description String?
 
-  planId      Int?
-  plan        Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId Int?
+  plan   Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  memberId    Int
-  member      Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model PlaceReview {
@@ -263,7 +300,7 @@ model PlaceReview {
 }
 
 model Chatroom {
-  id    String    @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String
   createdAt DateTime? @default(now())
   deletedAt DateTime?
@@ -279,11 +316,11 @@ model ChatroomParticipants {
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  @@unique([chatroomId, memberId])
+  @@id([chatroomId, memberId])
 }
 
 model ChatroomMessage {
-  id       Int    @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   Json
   createdAt DateTime? @default(now())
 
@@ -299,6 +336,7 @@ model Area {
   name String @unique
 
   guides GuideArea[]
+  boards Board[]
 }
 
 model GuideArea {
@@ -309,6 +347,68 @@ model GuideArea {
 
   areaId Int
   area   Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+}
+
+model File {
+  id        String    @id @default(uuid())
+  url       String    @unique
+  name      String?
+  createdAt DateTime? @default(now())
+
+  boards BoardFile[]
+}
+
+model BoardFile {
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  fileId String
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@id([boardId, fileId])
+}
+
+model Follow {
+  followerId  Int
+  follower    Member @relation("followerRelation", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId Int
+  following   Member @relation("followingRelation", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  photo       String?
+  price       Int?   @default(0)
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id        Int       @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  status    ReservationStatus @default(PENDING)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  serviceId Int
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  reviews      GuideReview[]
 }
 
 enum Provider {
@@ -336,12 +436,26 @@ enum MemberStatus {
 
 enum AccessStatus {
   PUBLIC
+  GUIDES
   PRIVATE
   DELETED
+}
+
+enum BoardStatus {
+  ACTIVE
+  PROCESSING
+  COMPLETE
 }
 
 enum BoardType {
   TRIP
   SOS
   NOTICE
+}
+
+enum ReservationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED
 }

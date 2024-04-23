@@ -1,17 +1,25 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { GuidesRepository } from './guides.repository';
 import { RegisterGuideDto } from './dto/register-guide.dto';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
-import { AuthService } from '../auth/auth.service';
 import { createPageResponse } from '../../shared/pagination/pagination.utils';
-import { GuidePaginationOptions } from './guides.interface';
+import {
+  GuidePaginationOptions,
+  GuideReviewPaginationOptions,
+} from './guides.interface';
+
+import { UpdateReviewDto } from './dto/update-review.dto';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class GuidesService {
-  constructor(
-    private readonly guidesRepository: GuidesRepository,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly guidesRepository: GuidesRepository) {}
 
   async findAll() {
     return this.guidesRepository.findAll();
@@ -23,6 +31,7 @@ export class GuidesService {
     options?: GuidePaginationOptions,
   ) {
     const guides = await this.guidesRepository.paginate(cursor, limit, options);
+
     const response = createPageResponse(
       guides,
       { cursor, limit },
@@ -54,26 +63,103 @@ export class GuidesService {
     );
   }
 
-  async updateService(id: number, content: string) {
-    return this.guidesRepository.updateService(id, content);
+  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
+    return this.guidesRepository.updateProfile(id, updateProfileDto);
   }
 
   async leaveGuide(id: number) {
     return this.guidesRepository.leaveGuide(id);
   }
 
-  async registerPhoneNumber(id: number, phoneNumber: string, authCode: string) {
-    await this.checkPhoneNumberValid(phoneNumber);
+  async paginateReviews(
+    cursor: number | null,
+    limit: number,
+    options?: GuideReviewPaginationOptions,
+  ) {
+    const reviews = await this.guidesRepository.getGuideReviewsWithPagination(
+      cursor,
+      limit,
+      options,
+    );
 
-    await this.authService.validateAuthCode(id, authCode, phoneNumber);
+    const response = createPageResponse(
+      reviews,
+      { cursor, limit },
+      reviews.length,
+    );
 
-    return this.guidesRepository.registerPhoneNumber(id, phoneNumber);
+    return response;
   }
 
-  private async checkPhoneNumberValid(phoneNumber: string) {
-    const isExist = await this.guidesRepository.findByPhoneNumber(phoneNumber);
-    if (isExist) {
-      throw new BadRequestException(ErrorMessage.PHONE_NUMBER_ALREADY_EXISTS);
+  async getReviews(guideId: number, cursor: number, limit: number) {
+    const options: GuideReviewPaginationOptions = {
+      guideId,
+    };
+
+    const reviews = await this.guidesRepository.getGuideReviewsWithPagination(
+      cursor,
+      limit,
+      options,
+    );
+
+    const response = createPageResponse(
+      reviews,
+      { cursor, limit },
+      reviews.length,
+    );
+
+    return response;
+  }
+
+  createReview(
+    guideId: number,
+    reviewerId: number,
+    createReviewDto: CreateReviewDto,
+  ) {
+    return this.guidesRepository.createReview(
+      guideId,
+      reviewerId,
+      createReviewDto,
+    );
+  }
+
+  async updateReview(
+    reviewId: number,
+    reviewerId: number,
+    updateReviewDto: UpdateReviewDto,
+  ) {
+    const review = await this.guidesRepository.findReview(reviewId);
+
+    if (!review) {
+      throw new NotFoundException(ErrorMessage.NOTFOUND_REVIEW);
     }
+
+    if (review.reviewerId !== reviewerId) {
+      throw new BadRequestException(ErrorMessage.PERMISSION_DENIED);
+    }
+
+    return this.guidesRepository.updateReview(reviewId, updateReviewDto);
+  }
+
+  async deleteReview(reviewId: number, reviewerId: number) {
+    const review = await this.guidesRepository.findReview(reviewId);
+
+    if (!review) {
+      throw new NotFoundException(ErrorMessage.NOTFOUND_REVIEW);
+    }
+
+    if (review.reviewerId !== reviewerId) {
+      throw new ForbiddenException(ErrorMessage.PERMISSION_DENIED);
+    }
+
+    return this.guidesRepository.deleteReview(reviewId);
+  }
+
+  getServices(guideId: number) {
+    return this.guidesRepository.getServices(guideId);
+  }
+
+  getReservations(guideId: number) {
+    return this.guidesRepository.getReservations(guideId);
   }
 }

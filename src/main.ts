@@ -7,6 +7,7 @@ import {
   CorsConfig,
   NestConfig,
   RedisConfig,
+  SecurityConfig,
 } from './configs/config.interface';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
@@ -17,9 +18,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'debug', 'log'],
   });
+  app.setGlobalPrefix('api'); // 모든 라우트에 /api를 기본 경로로 설정
 
   const config = app.get<ConfigService>(ConfigService);
   const nest = config.get<NestConfig>('nest');
+  const security = config.get<SecurityConfig>('security');
   const cors = config.get<CorsConfig>('cors');
   const base = config.get<BaseConfig>('base');
   const redis = config.get<RedisConfig>('redis');
@@ -36,7 +39,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(
     session({
-      secret: 'my-secret',
+      secret: security.sessionSecret,
       resave: false,
       saveUninitialized: false,
     }),
