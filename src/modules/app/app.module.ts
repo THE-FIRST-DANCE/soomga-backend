@@ -63,6 +63,7 @@ import { ReservationsModule } from '../reservations/reservations.module';
             socket: {
               host: redisConfig.host,
               port: redisConfig.port,
+              tls: process.env.NODE_ENV === 'production' ? true : false,
             },
           });
           return { store: redis };
