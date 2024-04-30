@@ -4,7 +4,8 @@ import { GoogleHttpService } from 'src/modules/common/http/google-http.service';
 import { KakaoHttpService } from 'src/modules/common/http/kakao-http.service';
 import { OrtoolsService } from 'src/modules/common/http/ortools.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { PlanAddDto } from './dto/plans.dto';
+import { PlanAddDto, PlanCommentDto } from './dto/plans.dto';
+import { Plan } from '@prisma/client';
 
 @Injectable()
 export class PlansRepository {
@@ -203,6 +204,7 @@ export class PlansRepository {
             nextLat: nextItem.item.latitude,
             nextLng: nextItem.item.longitude,
             nextPlaceName: nextItem.item.name,
+            description: '',
           });
         }
       });
@@ -219,6 +221,7 @@ export class PlansRepository {
           nextLat: null,
           nextLng: null,
           nextPlaceName: null,
+          description: '',
         });
       }
     });
@@ -335,6 +338,7 @@ export class PlansRepository {
             nextLat: null,
             nextLng: null,
             nextPlaceName: null,
+            description: '',
           };
         } else {
           return {
@@ -358,6 +362,7 @@ export class PlansRepository {
             nextPlaceName: data.list[period].find(
               (place) => place.item.placeId === result.destination,
             )?.item.name,
+            description: '',
           };
         }
       });
@@ -377,18 +382,59 @@ export class PlansRepository {
   }
 
   // 스케줄 저장
-  async saveSchedule(data: PlanAddDto) {
+  async saveOrUpdateSchedule(data: PlanAddDto) {
     try {
-      const plan = await this.prismaService.plan.create({
-        data: {
-          title: data.title,
-          region: data.region,
-          authorId: 1,
-          transport: data.transport,
-          period: data.period,
-        },
-      });
+      let plan: Plan;
+      if (data.planId) {
+        // 기존 플랜을 찾아 업데이트
+        plan = await this.prismaService.plan.findUnique({
+          where: { id: data.planId },
+        });
 
+        if (!plan) {
+          throw new Error('Plan not found.');
+        }
+
+        if (plan.authorId !== data.memberId) {
+          plan = await this.prismaService.plan.create({
+            data: {
+              title: data.title,
+              region: data.region,
+              authorId: data.memberId, // memberId를 authorId로 사용
+              transport: data.transport,
+              period: data.period,
+            },
+          });
+        } else {
+          plan = await this.prismaService.plan.update({
+            where: {
+              id: data.planId,
+            },
+            data: {
+              title: data.title,
+              region: data.region,
+              transport: data.transport,
+              period: data.period,
+              daySchedules: {
+                deleteMany: {},
+              },
+            },
+          });
+        }
+      } else {
+        // 새로운 플랜 생성
+        plan = await this.prismaService.plan.create({
+          data: {
+            title: data.title,
+            region: data.region,
+            authorId: data.memberId, // memberId를 authorId로 사용
+            transport: data.transport,
+            period: data.period,
+          },
+        });
+      }
+
+      // 연결된 일정 생성 또는 업데이트 로직
       for (let i = 1; i < data.period + 1; i++) {
         const daySchedule = await this.prismaService.daySchedule.create({
           data: {
@@ -397,23 +443,27 @@ export class PlansRepository {
           },
         });
 
-        for (const place of data.list[i]) {
+        // 일정에 연결된 스케줄 생성 또는 업데이트 로직
+        for (let j = 0; j < data.list[i].length; j++) {
+          const item = data.list[i][j];
+
           await this.prismaService.schedule.create({
             data: {
-              stayTime: place.stayTime,
-              nextLat: place.nextLat,
-              nextLng: place.nextLng,
-              nextPlaceId: place.nextPlaceId,
-              nextTime: place.nextTime,
-              nextPlaceName: place.nextPlaceName,
               dayScheduleId: daySchedule.id,
-              placeId: place.item.id,
+              placeId: item.item.id,
+              stayTime: item.stayTime,
+              nextLat: item.nextLat,
+              nextLng: item.nextLng,
+              nextTime: item.nextTime,
+              nextPlaceName: item.nextPlaceName,
+              nextPlaceId: item.nextPlaceId,
+              description: item.description,
             },
           });
         }
       }
     } catch (error) {
-      throw new Error(`Failed to save schedule: ${error.message}`);
+      throw new Error(`Failed to save or update schedule: ${error.message}`);
     }
   }
 
@@ -432,6 +482,12 @@ export class PlansRepository {
                   item: true,
                 },
               },
+            },
+          },
+          author: true,
+          comments: {
+            include: {
+              member: true,
             },
           },
         },
@@ -463,5 +519,47 @@ export class PlansRepository {
     } catch (error) {
       throw new Error(`Failed to get plan by user id: ${error.message}`);
     }
+  }
+
+  // 플랜 삭제
+  async deletePlan(planId: number) {
+    try {
+      return await this.prismaService.plan.delete({
+        where: {
+          id: planId,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Failed to delete plan: ${error.message}`);
+    }
+  }
+
+  // 플랜 댓글 작성
+  addComment(planCommentDto: PlanCommentDto) {
+    return this.prismaService.planComment.create({
+      data: {
+        content: planCommentDto.content,
+        memberId: planCommentDto.memberId,
+        planId: planCommentDto.planId,
+      },
+    });
+  }
+
+  // 플랜 댓글 불러오기
+  getComments(planId: number) {
+    return this.prismaService.planComment.findMany({
+      where: {
+        planId: planId,
+      },
+    });
+  }
+
+  // 플랜 댓글 삭제
+  deleteComment(commentId: number) {
+    return this.prismaService.planComment.delete({
+      where: {
+        id: commentId,
+      },
+    });
   }
 }

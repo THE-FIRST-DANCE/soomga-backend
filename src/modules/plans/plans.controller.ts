@@ -1,9 +1,18 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { PlansService } from './plans.service';
 import { PlanDistance } from 'src/interfaces/google.interface';
-import { PlanAddDto } from './dto/plans.dto';
+import { PlanAddDto, PlanCommentDto } from './dto/plans.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Plan } from '@prisma/client';
+import { ParseIntWithDefaultPipe } from '../../shared/pagination/pagination.pipe';
 
 @ApiTags('플랜 API')
 @Controller('plans')
@@ -80,5 +89,47 @@ export class PlansController {
   @Post('save')
   async savePlan(@Body() data: PlanAddDto) {
     return await this.plansService.savePlan(data);
+  }
+
+  // 플랜 삭제
+  @ApiOperation({
+    summary: '플랜 삭제',
+    description: '플랜을 삭제합니다.',
+  })
+  @Delete(':planId')
+  deletePlan(@Param('planId', ParseIntWithDefaultPipe) planId: number) {
+    return this.plansService.deletePlan(planId);
+  }
+
+  // 플랜 댓글 달기
+  @ApiOperation({
+    summary: '플랜 댓글 달기',
+    description: '플랜에 댓글을 답니다.',
+  })
+  @Post('comment')
+  addComment(@Body() planCommentDto: PlanCommentDto) {
+    return this.plansService.addComment(planCommentDto);
+  }
+
+  // 댓글 불러오기
+  @ApiOperation({
+    summary: '댓글 불러오기',
+    description: '플랜의 댓글을 불러옵니다.',
+  })
+  @Get(':planId/comments')
+  getComments(@Param('planId', ParseIntWithDefaultPipe) planId: number) {
+    return this.plansService.getComments(planId);
+  }
+
+  // 댓글 삭제
+  @ApiOperation({
+    summary: '댓글 삭제',
+    description: '댓글을 삭제합니다.',
+  })
+  @Delete('comment/:commentId')
+  deleteComment(
+    @Param('commentId', ParseIntWithDefaultPipe) commentId: number,
+  ) {
+    return this.plansService.deleteComment(commentId);
   }
 }

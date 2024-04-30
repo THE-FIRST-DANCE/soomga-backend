@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PlansRepository } from './plans.repository';
 import { PlanDistance } from 'src/interfaces/google.interface';
-import { PlanAddDto } from './dto/plans.dto';
+import { PlanAddDto, PlanCommentDto } from './dto/plans.dto';
 
 @Injectable()
 export class PlansService {
@@ -36,7 +36,27 @@ export class PlansService {
   }
 
   // 경로 저장
-  async savePlan(data: PlanAddDto) {
-    return await this.plansRepository.saveSchedule(data);
+  savePlan(data: PlanAddDto) {
+    return this.plansRepository.saveOrUpdateSchedule(data);
+  }
+
+  // 플랜 삭제
+  deletePlan(planId: number) {
+    return this.plansRepository.deletePlan(planId);
+  }
+
+  // 플랜 댓글 달기
+  addComment(planCommentDto: PlanCommentDto) {
+    return this.plansRepository.addComment(planCommentDto);
+  }
+
+  // 플랜 댓글 불러오기
+  getComments(planId: number) {
+    return this.plansRepository.getComments(planId);
+  }
+
+  // 플랜 댓글 삭제
+  deleteComment(commentId: number) {
+    return this.plansRepository.deleteComment(commentId);
   }
 }
