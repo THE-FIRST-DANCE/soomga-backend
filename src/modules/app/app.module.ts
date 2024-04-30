@@ -27,6 +27,8 @@ import { UploadsModule } from '../uploads/uploads.module';
 import { envValidateSchema } from 'src/configs/env-validate.schema';
 import { AreasModule } from '../areas/areas.module';
 import { MypageModule } from '../mypage/mypage.module';
+import { ServicesModule } from '../services/services.module';
+import { ReservationsModule } from '../reservations/reservations.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { MypageModule } from '../mypage/mypage.module';
     CoolsmsModule,
     HealthModule,
     ChatModule,
+    ServicesModule,
+    ReservationsModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (
@@ -59,6 +63,7 @@ import { MypageModule } from '../mypage/mypage.module';
             socket: {
               host: redisConfig.host,
               port: redisConfig.port,
+              tls: process.env.NODE_ENV === 'production' ? true : false,
             },
           });
           return { store: redis };

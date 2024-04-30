@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AwsService } from '../aws/aws.service';
-import { randomUUID } from 'crypto';
 import { UploadsRepository } from './uploads.repository';
+import iconv from 'iconv-lite';
 
 @Injectable()
 export class UploadsService {
@@ -11,9 +11,13 @@ export class UploadsService {
   ) {}
 
   async uploadFile(file: Express.Multer.File) {
-    const fileName = `${randomUUID()}_${file.originalname}`;
-    const url = await this.awsService.uploadFile(fileName, file);
-    return this.uploadsRepository.fileUpload(file.originalname, url);
+    const originalName = iconv.decode(
+      Buffer.from(file.originalname, 'binary'),
+      'utf-8',
+    );
+
+    const url = await this.awsService.uploadFile(originalName, file);
+    return this.uploadsRepository.fileUpload(originalName, url);
   }
 
   async uploadFiles(files: Express.Multer.File[]) {

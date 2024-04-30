@@ -7,27 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "soomga-erd.svg"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "soomga-erd.svg"
+// }
 
 model Member {
-  id         Int           @id @default(autoincrement())
-  email      String?       @unique
-  nickname   String
-  password   String
-  avatar     String?
-  birthdate  DateTime?     @default(now())
-  gender     Gender?
-  status     MemberStatus? @default(ACTIVE)
-  role       Role?         @default(USER)
-  provider   Provider?     @default(LOCAL)
-  providerId String?
-  pushToken  String?
-  createdAt  DateTime?     @default(now())
-  updatedAt  DateTime?     @updatedAt
-  deletedAt  DateTime?
+  id              Int           @id @default(autoincrement())
+  email           String?       @unique
+  nickname        String
+  password        String
+  avatar          String?
+  birthdate       DateTime?     @default(now())
+  gender          Gender?
+  status          MemberStatus? @default(ACTIVE)
+  role            Role?         @default(USER)
+  provider        Provider?     @default(LOCAL)
+  providerId      String?
+  pushToken       String?
+  phoneNumber     String?       @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime?     @default(now())
+  updatedAt       DateTime?     @updatedAt
+  deletedAt       DateTime?
 
   tags         MemberTag[]
   languages    MemberLanguage[]
@@ -40,6 +42,7 @@ model Member {
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
   PlanComments PlanComment[]
+  reservations Reservation[]
 
   followers  Follow[] @relation("followerRelation")
   followings Follow[] @relation("followingRelation")
@@ -52,7 +55,6 @@ model GuideProfile {
   temperature         Float?      @default(36.5)
   service             String?
   areas               GuideArea[]
-  phoneNumber         String?     @unique
   verifiedAt          DateTime?
   verifiedID          Boolean?    @default(false)
   verifiedBankAccount Boolean?    @default(false)
@@ -60,10 +62,13 @@ model GuideProfile {
   member                 Member                       @relation(fields: [id], references: [id], onDelete: Cascade)
   languageCertifications GuideLanguageCertification[]
   reviews                GuideReview[]
+  services               Service[]
+  reservations           Reservation[]
 }
 
 model GuideReview {
   id                 Int       @id @default(autoincrement())
+  reservationId          Int?
   communicationScore Int       @default(5)
   kindnessScore      Int       @default(5)
   locationScore      Int       @default(5)
@@ -71,6 +76,7 @@ model GuideReview {
   createdAt          DateTime? @default(now())
   updatedAt          DateTime? @updatedAt
 
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
   guideId    Int?
   guide      GuideProfile? @relation(fields: [guideId], references: [id], onDelete: Cascade)
   reviewerId Int?
@@ -97,8 +103,8 @@ model Board {
   comments Comment[]
   files    BoardFile[]
 
-  areaId  Int?
-  area    Area? @relation(fields: [areaId], references: [id])
+  areaId Int?
+  area   Area? @relation(fields: [areaId], references: [id])
 
   authorId Int?
   author   Member? @relation(fields: [authorId], references: [id])
@@ -387,6 +393,40 @@ model Follow {
   @@id([followerId, followingId])
 }
 
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  photo       String?
+  price       Int?   @default(0)
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id        Int       @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  status    ReservationStatus @default(PENDING)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  serviceId Int
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  guideId Int
+  guide   GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  reviews      GuideReview[]
+}
+
 enum Provider {
   LOCAL
   GOOGLE
@@ -427,4 +467,11 @@ enum BoardType {
   TRIP
   SOS
   NOTICE
+}
+
+enum ReservationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED
 }

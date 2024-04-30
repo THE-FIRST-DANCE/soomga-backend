@@ -1,3 +1,5 @@
+import { Plan, Reservation, File } from '@prisma/client';
+
 export interface Sender {
   id: number;
   nickname: string;
@@ -6,7 +8,7 @@ export interface Sender {
 
 export interface Content {
   message: string;
-  extra?: any;
+  extra?: Extra;
 }
 
 export interface Message {
@@ -15,3 +17,26 @@ export interface Message {
   content: Content;
   createdAt: Date;
 }
+
+// Extra
+export interface PhotoExtra {
+  type: 'photo';
+  data: string; // photoUrl
+}
+
+export interface FileExtra {
+  type: 'file';
+  data: File; // fileUrl
+}
+
+export interface ReservationExtra {
+  type: 'reservation';
+  data: Reservation;
+}
+
+export interface PlanExtra {
+  type: 'plan';
+  data: Plan;
+}
+
+export type Extra = PhotoExtra | FileExtra | ReservationExtra | PlanExtra;

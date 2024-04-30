@@ -8,7 +8,7 @@ export class NotificationService {
   private expo = new Expo();
 
   async sendPushNotification(title: string, body: string, data: any) {
-    const token = process.env.testToken;
+    const token = 'ExponentPushToken[Zx_bn3Nlu11SYpC3SZda0V]';
 
     const messages = [];
     if (!Expo.isExpoPushToken(token)) {

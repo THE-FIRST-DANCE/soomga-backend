@@ -1,13 +1,13 @@
 {
-  "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:953647671570:task-definition/soomga-task:1",
+  "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:953647671570:task-definition/soomga-backend:2",
   "containerDefinitions": [
       {
-          "name": "soomga-nest-container",
-          "image": "953647671570.dkr.ecr.ap-northeast-2.amazonaws.com/soomga-nest:720d9c818ab4a346206d33c42da1ebd84d70098b",
+          "name": "soomga-backend-container",
+          "image": "953647671570.dkr.ecr.ap-northeast-2.amazonaws.com/soomga-backend:f971d589d272d2563feab940c3472a70a2c21984",
           "cpu": 0,
           "portMappings": [
               {
-                  "name": "soomga-nest-container-3000-tcp",
+                  "name": "soomga-backend-container-3000-tcp",
                   "containerPort": 3000,
                   "hostPort": 3000,
                   "protocol": "tcp",
@@ -24,24 +24,24 @@
           ],
           "mountPoints": [],
           "volumesFrom": [],
-          "ulimits": [],
           "logConfiguration": {
               "logDriver": "awslogs",
               "options": {
                   "awslogs-create-group": "true",
-                  "awslogs-group": "/ecs/soomga-task",
+                  "awslogs-group": "/ecs/soomga-backend",
                   "awslogs-region": "ap-northeast-2",
                   "awslogs-stream-prefix": "ecs"
               },
               "secretOptions": []
-          }
+          },
+          "systemControls": []
       }
   ],
-  "family": "soomga-task",
+  "family": "soomga-backend",
   "taskRoleArn": "arn:aws:iam::953647671570:role/role-nestjs",
   "executionRoleArn": "arn:aws:iam::953647671570:role/role-nestjs",
   "networkMode": "awsvpc",
-  "revision": 1,
+  "revision": 2,
   "volumes": [],
   "status": "ACTIVE",
   "requiresAttributes": [
@@ -90,7 +90,7 @@
       "cpuArchitecture": "X86_64",
       "operatingSystemFamily": "LINUX"
   },
-  "registeredAt": "2024-02-18T23:03:56.209Z",
+  "registeredAt": "2024-04-23T11:45:15.341Z",
   "registeredBy": "arn:aws:iam::953647671570:root",
   "tags": []
 }

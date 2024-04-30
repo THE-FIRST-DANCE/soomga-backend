@@ -216,4 +216,16 @@ export class MembersRepository {
       },
     });
   }
+
+  findByPhoneNumber(phoneNumber: string) {
+    return this.prismaService.member.findUnique({
+      where: { phoneNumber },
+    });
+  }
+
+  getReservations(id: number) {
+    return this.prismaService.reservation.findMany({
+      where: { memberId: id },
+    });
+  }
 }

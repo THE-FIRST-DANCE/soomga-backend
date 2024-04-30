@@ -3,6 +3,7 @@ import { Config } from 'src/configs/config.interface';
 export const envValidateSchema: Joi.ObjectSchema<Config> = Joi.object({
   nest: Joi.object<Config['nest']>({
     port: Joi.number().required(),
+    name: Joi.string().required(),
   }),
   cors: Joi.object<Config['cors']>({
     enabled: Joi.boolean().required(),

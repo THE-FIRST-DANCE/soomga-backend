@@ -11,6 +11,7 @@ export interface Config {
 
 export interface NestConfig {
   port: number | string;
+  name: string;
 }
 
 export interface CorsConfig {

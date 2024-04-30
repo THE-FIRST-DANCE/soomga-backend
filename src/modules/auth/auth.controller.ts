@@ -8,7 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { OAuthProfile } from '../../interfaces/auth.interface';
 import {
@@ -27,6 +27,7 @@ import { BaseConfig, SecurityConfig } from '../../configs/config.interface';
 import { Member } from '@prisma/client';
 import { SendAuthCodeDto } from './dto/send-authcode.dto';
 import { User } from './auth.decorator';
+import { RegisterPhoneNumberDto } from './dto/register-phone-number.dto';
 
 @ApiTags('사용자 인증 API')
 @Controller('auth')
@@ -98,11 +99,12 @@ export class AuthController {
     });
   }
 
-  @Post('auth-code')
+  @Post('auth-code/phone')
   @UseGuards(AuthMemberGuard)
+  @ApiBearerAuth()
   @ApiOperation({
-    summary: '인증코드 발송',
-    description: '가이드에게 인증코드를 발송합니다.',
+    summary: '휴대폰 인증코드 발송',
+    description: '사용자에게 인증코드를 발송합니다.',
   })
   async sendAuthCode(
     @User() user: Member,
@@ -111,7 +113,7 @@ export class AuthController {
   ) {
     const { id } = user;
 
-    await this.authService.sendAuthCode(id, phoneNumber);
+    await this.authService.sendPhoneAuthCode(id, phoneNumber);
 
     return res.json({ message: '인증코드가 발송되었습니다.' });
   }
@@ -199,6 +201,24 @@ export class AuthController {
     });
 
     res.json({ message: 'accessToken 재발급 완료' });
+  }
+
+  @Post('register/phone-number')
+  @UseGuards(AuthMemberGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: '휴대폰 번호 등록',
+    description: '휴대폰 번호를 등록합니다.',
+  })
+  async registerPhoneNumber(
+    @User() user: Member,
+    @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
+    @Res() res: Response,
+  ) {
+    const { id } = user;
+    await this.authService.registerPhoneNumber(id, registerPhoneNumberDto);
+
+    return res.json({ message: '휴대폰 번호가 등록되었습니다.' });
   }
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {

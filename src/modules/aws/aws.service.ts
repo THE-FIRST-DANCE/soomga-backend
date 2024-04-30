@@ -1,6 +1,7 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import moment from 'moment';
 import { AwsConfig } from 'src/configs/config.interface';
 import axios from 'axios';
@@ -21,7 +22,8 @@ export class AwsService {
     });
   }
 
-  async uploadFile(fileName: string, file: Express.Multer.File) {
+  async uploadFile(originalName: string, file: Express.Multer.File) {
+    const fileName = `${randomUUID()}_${originalName}`;
     const key = `uploads/${moment().format('YYMMDD')}/${fileName}`;
 
     const command = new PutObjectCommand({
@@ -29,7 +31,7 @@ export class AwsService {
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ContentDisposition: `attachment; filename="${file.originalname}"`,
+      ContentDisposition: `attachment; filename="${encodeURIComponent(originalName)}"`,
     });
 
     try {
