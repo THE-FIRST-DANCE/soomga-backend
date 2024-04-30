@@ -39,6 +39,7 @@ model Member {
   chatrooms    ChatroomParticipants[]
   messages     ChatroomMessage[]
   guideReviews GuideReview[]
+  PlanComments PlanComment[]
 
   followers  Follow[] @relation("followerRelation")
   followings Follow[] @relation("followingRelation")
@@ -207,9 +208,23 @@ model Plan {
 
   memberEvents MemberEvent[]
   daySchedules DaySchedule[]
+  comments     PlanComment[]
 
   authorId Int
   author   Member @relation(fields: [authorId], references: [id])
+}
+
+model PlanComment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  planId Int
+  plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model DaySchedule {
@@ -231,6 +246,7 @@ model Schedule {
   nextPlaceName String?
   nextTime      String?
   stayTime      String?
+  description   String?
 
   dayScheduleId Int
   daySchedule   DaySchedule @relation(fields: [dayScheduleId], references: [id], onDelete: Cascade)
