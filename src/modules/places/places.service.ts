@@ -3,6 +3,7 @@ import { PlacesRepository } from './places.repository';
 import { GooglePlaceResponse } from '../../interfaces/google.interface';
 import { PlaceAddDto } from './dto/place.dto';
 import { Place } from '@prisma/client';
+import { createPageResponse } from '../../shared/pagination/pagination.utils';
 
 @Injectable()
 export class PlacesService {
@@ -16,8 +17,22 @@ export class PlacesService {
     return this.placesRepository.searchPlaces(query, pagetoken, location);
   }
 
-  async getPlaces(category: string, region: string) {
-    return this.placesRepository.getPlaces(category, region);
+  async getPlaces(
+    category: string,
+    region: string,
+    cursor: number,
+    limit: number,
+    search: string,
+  ) {
+    const places = await this.placesRepository.getPlaces(
+      category,
+      region,
+      cursor,
+      limit,
+      search,
+    );
+
+    return createPageResponse(places, { cursor, limit }, places.length);
   }
 
   async addPlace(place: PlaceAddDto): Promise<Place> {

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import moment from 'moment';
 import { AwsConfig } from 'src/configs/config.interface';
+import axios from 'axios';
 
 @Injectable()
 export class AwsService {
@@ -38,6 +39,32 @@ export class AwsService {
       return `https://${this.awsConfig.s3Bucket}.s3.amazonaws.com/${key}`;
     } catch (error) {
       console.error('🐊 Error uploading file: ', error);
+      throw error;
+    }
+  }
+
+  async uploadFileFromUrl(url: string, fileName: string) {
+    const key = `uploads/${moment().format('YYMMDD')}/${fileName}`;
+
+    const response = await axios({
+      method: 'get',
+      url,
+      responseType: 'stream',
+    });
+
+    const command = new PutObjectCommand({
+      Bucket: this.awsConfig.s3Bucket,
+      Key: key,
+      Body: response.data, // 스트림으로 바로 AWS S3에 업로드
+      ContentType: response.headers['content-type'],
+      ContentLength: response.headers['content-length'],
+    });
+
+    try {
+      await this.s3Client.send(command);
+      return `https://${this.awsConfig.s3Bucket}.s3.amazonaws.com/${key}`;
+    } catch (error) {
+      console.error('Error uploading file to S3:', error);
       throw error;
     }
   }

@@ -4,6 +4,7 @@ import { GooglePlaceResponse } from '../../interfaces/google.interface';
 import { PlaceAddDto } from './dto/place.dto';
 import { Place } from '@prisma/client';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ParseIntWithDefaultPipe } from '../../shared/pagination/pagination.pipe';
 
 @ApiTags('장소 API')
 @Controller('places')
@@ -32,9 +33,20 @@ export class PlacesController {
     description: '카테고리와 지역을 기준으로 장소를 조회합니다.',
   })
   @Get()
-  async getPlaces(@Query() param: { category: string; region: string }) {
-    const { category, region } = param;
-    return this.placesService.getPlaces(category, region);
+  async getPlaces(
+    @Query('category') category: string = 'all',
+    @Query('region') region: string,
+    @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
+    @Query('limit', ParseIntWithDefaultPipe) limit: number = 10,
+    @Query('search') search?: string,
+  ) {
+    return this.placesService.getPlaces(
+      category,
+      region,
+      cursor,
+      limit,
+      search,
+    );
   }
 
   @ApiOperation({

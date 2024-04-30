@@ -4,21 +4,26 @@ import { GoogleHttpService } from '../common/http/google-http.service';
 import { GooglePlaceResponse } from '../../interfaces/google.interface';
 import { PlaceAddDto } from './dto/place.dto';
 import { Place } from '@prisma/client';
+import axios from 'axios';
+import { AwsService } from '../aws/aws.service';
 
 @Injectable()
 export class PlacesRepository {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly googleService: GoogleHttpService,
+    private readonly awsService: AwsService,
   ) {}
 
   // 장소 검색
-  async searchPlaces(
-    query: string,
-    pagetoken: string,
-    location: string,
-  ): Promise<GooglePlaceResponse> {
-    return this.googleService.searchPlaces(query, pagetoken, location);
+  async searchPlaces(query: string, pagetoken: string, location: string) {
+    const places = await this.googleService.searchPlaces(
+      query,
+      pagetoken,
+      location,
+    );
+
+    return places;
   }
 
   // 장소 상세 정보
@@ -29,31 +34,44 @@ export class PlacesRepository {
   }
 
   // 장소 목록
-  async getPlaces(category: string, region: string) {
-    try {
-      if (category === 'all') {
-        return await this.prismaService.place.findMany({
-          where: {
-            region,
-          },
-          include: {
-            openingHours: true,
-          },
-        });
-      }
-
-      return await this.prismaService.place.findMany({
+  getPlaces(
+    category: string,
+    region: string,
+    cursor: number,
+    limit: number,
+    search: string,
+  ): Promise<Place[]> {
+    if (category === 'all') {
+      console.log(search);
+      return this.prismaService.place.findMany({
         where: {
-          category,
+          id: { lt: cursor },
           region,
+          name: {
+            contains: search,
+          },
         },
-        include: {
-          openingHours: true,
+        take: limit,
+        orderBy: {
+          id: 'desc',
         },
       });
-    } catch (error) {
-      throw new Error('Failed to get places');
     }
+
+    return this.prismaService.place.findMany({
+      where: {
+        id: { lt: cursor },
+        region,
+        category,
+        name: {
+          contains: search,
+        },
+      },
+      take: limit,
+      orderBy: {
+        id: 'desc',
+      },
+    });
   }
 
   // 장소 추가
@@ -71,13 +89,18 @@ export class PlacesRepository {
 
       const placeDetail = await this.getDetail(place.placeId);
 
+      const photoUrl = await this.awsService.uploadFileFromUrl(
+        place.photo,
+        `${place.placeId}.jpg`,
+      );
+
       const createPlace = await this.prismaService.place.create({
         data: {
           name: place.name,
           placeId: place.placeId,
           rating: place.rating,
           address: place.address,
-          photo: place.photo,
+          photo: photoUrl,
           category: place.category,
           latitude: place.latitude,
           longitude: place.longitude,
@@ -113,7 +136,7 @@ export class PlacesRepository {
 
       return createPlace;
     } catch (error) {
-      throw new Error('Failed to add place');
+      throw new Error('Failed to add place' + error);
     }
   }
 }

@@ -19,7 +19,7 @@ export class GoogleHttpService {
           key: process.env.GOOGLE_CLIENT_SEARCH_ID,
           keyword: query,
           location,
-          radius: 8000,
+          radius: 20000,
           pagetoken,
           language: 'ko',
         },

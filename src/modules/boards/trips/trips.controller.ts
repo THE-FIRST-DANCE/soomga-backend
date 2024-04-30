@@ -44,6 +44,12 @@ export class TripsController {
     return this.tripsService.findAll();
   }
 
+  @Get('recommendation')
+  @ApiOperation({ summary: '추천 여행 게시글 조회' })
+  findRecommendation() {
+    return this.tripsService.findRecommendation();
+  }
+
   @Get('find')
   @ApiOperation({ summary: '조건 여행 게시물 무한 스크롤' })
   @Pagination()

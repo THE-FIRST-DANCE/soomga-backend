@@ -298,6 +298,7 @@ export class GuidesRepository {
           },
         },
         tags: { include: { tag: { select: { id: true, name: true } } } },
+        plans: true,
       },
     });
   }
