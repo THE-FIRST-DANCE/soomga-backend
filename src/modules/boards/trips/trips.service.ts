@@ -36,6 +36,10 @@ export class TripsService {
     return this.tripsRepository.findOne(id);
   }
 
+  findRecommendation() {
+    return this.tripsRepository.findRecommendation();
+  }
+
   update(id: number, updateTripDto: UpdateTripDto) {
     return this.tripsRepository.update(id, updateTripDto);
   }

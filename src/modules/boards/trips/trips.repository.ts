@@ -89,6 +89,31 @@ export class TripsRepository implements BoardsRepositoryInterface {
     });
   }
 
+  findRecommendation() {
+    return this.prisma.board.findMany({
+      where: { type: BoardType.TRIP },
+      take: 6,
+      orderBy: {
+        likes: {
+          _count: 'desc',
+        },
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+        author: true,
+      },
+    });
+  }
   findOne(id: number): Promise<Board> {
     return this.prisma.board.findUnique({
       where: { id },
