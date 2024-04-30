@@ -1,11 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BoardType, Prisma } from '@prisma/client';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateBoardDto implements Prisma.BoardCreateInput {
   @ApiProperty()
   @IsString()
   title: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  authorId: number;
 
   @ApiProperty({ required: false })
   @IsString()
