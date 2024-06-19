@@ -8,9 +8,19 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { OAuthProfile } from '../../interfaces/auth.interface';
+import { AuthPayload, OAuthProfile } from '../../interfaces/auth.interface';
 import {
   AuthGoogleGuard,
   AuthGoogleMobileGuard,
@@ -44,11 +54,11 @@ export class AuthController {
   }
 
   @Post('signin')
-  @HttpCode(200)
   @ApiOperation({
     summary: '로그인',
     description: '사용자 로그인을 처리합니다.',
   })
+  @ApiOkResponse({ description: '로그인 성공' })
   async signIn(
     @Body() body: SignInDto,
     @Res() res: Response,
@@ -58,7 +68,7 @@ export class AuthController {
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.json({
+    return res.status(200).json({
       message: '로그인 되었습니다.',
       accessToken,
       refreshToken,
@@ -67,31 +77,31 @@ export class AuthController {
   }
 
   @Post('signout')
-  @HttpCode(200)
   @ApiOperation({
     summary: '로그아웃',
     description: '사용자 로그아웃을 처리합니다.',
   })
+  @ApiOkResponse({ description: '로그아웃 성공' })
   async signOut(@Res() res: Response): Promise<Response> {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
 
-    return res.json({ message: '로그아웃 되었습니다.' });
+    return res.status(200).json({ message: '로그아웃 되었습니다.' });
   }
 
   @Post('signup')
-  @HttpCode(201)
   @ApiOperation({
     summary: '회원가입',
     description: '새 사용자 등록을 처리합니다.',
   })
+  @ApiCreatedResponse({ description: '회원가입 성공' })
   async signUp(@Body() signUpDto: SignUpDto, @Res() res: Response) {
     const { accessToken, refreshToken, user } =
       await this.authService.signUp(signUpDto);
 
     this.setCookies(res, accessToken, refreshToken);
 
-    return res.json({
+    return res.status(201).json({
       message: '회원가입 되었습니다.',
       accessToken,
       refreshToken,
@@ -106,16 +116,15 @@ export class AuthController {
     summary: '휴대폰 인증코드 발송',
     description: '사용자에게 인증코드를 발송합니다.',
   })
+  @ApiOkResponse({ description: '인증코드 발송 성공' })
   async sendAuthCode(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() { phoneNumber }: SendAuthCodeDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
-
     await this.authService.sendPhoneAuthCode(id, phoneNumber);
 
-    return res.json({ message: '인증코드가 발송되었습니다.' });
+    return res.status(200).json({ message: '인증코드가 발송되었습니다.' });
   }
 
   // google oauth 로그인
@@ -193,6 +202,7 @@ export class AuthController {
 
   @UseGuards(AuthJwtRefreshGuard)
   @Post('refresh')
+  @ApiOkResponse({ description: 'accessToken 재발급 성공' })
   async refresh(@User() user: Member, @Res() res: Response) {
     const accessToken = await this.authService.restoreAccessToken(user);
 
@@ -200,7 +210,7 @@ export class AuthController {
       maxAge: this.security.accessTokenExpiresIn,
     });
 
-    res.json({ message: 'accessToken 재발급 완료' });
+    return res.status(200).json({ message: 'accessToken 재발급 완료' });
   }
 
   @Post('register/phone-number')
@@ -210,15 +220,15 @@ export class AuthController {
     summary: '휴대폰 번호 등록',
     description: '휴대폰 번호를 등록합니다.',
   })
+  @ApiCreatedResponse({ description: '휴대폰 번호 등록 성공' })
   async registerPhoneNumber(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() registerPhoneNumberDto: RegisterPhoneNumberDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
     await this.authService.registerPhoneNumber(id, registerPhoneNumberDto);
 
-    return res.json({ message: '휴대폰 번호가 등록되었습니다.' });
+    return res.status(201).json({ message: '휴대폰 번호가 등록되었습니다.' });
   }
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {

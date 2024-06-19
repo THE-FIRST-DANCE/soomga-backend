@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { MembersRepository } from '../members/members.repository';
 import { GuidesRepository } from '../guides/guides.repository';
 import { DeleteMembersDto, DeleteType } from './dto/delete-members.dto';
-import { InactiveMembersDto } from './dto/inactive-members.dto';
-import { ActiveMembersDto } from './dto/active-members.dto';
+import { DeactivateMembersDto } from './dto/deactivate-members.dto';
+import { ActivateMembersDto } from './dto/activate-members.dto';
 
 @Injectable()
 export class AdminService {
@@ -12,12 +12,12 @@ export class AdminService {
     private readonly guidesRepository: GuidesRepository,
   ) {}
 
-  async inactiveMembers(activeMembersDto: ActiveMembersDto) {
+  async deactivateMembers(activeMembersDto: ActivateMembersDto) {
     const { ids } = activeMembersDto;
     return this.memberRepository.inactiveMembers(ids);
   }
 
-  async activeMembers(inactiveMembersDto: InactiveMembersDto) {
+  async activateMembers(inactiveMembersDto: DeactivateMembersDto) {
     const { ids } = inactiveMembersDto;
     return this.memberRepository.activeMembers(ids);
   }

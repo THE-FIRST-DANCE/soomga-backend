@@ -7,6 +7,7 @@ export interface Config {
   base: BaseConfig;
   cache: CacheConfig;
   aws: AwsConfig;
+  personalize: PersonalizeConfig;
 }
 
 export interface NestConfig {
@@ -63,4 +64,10 @@ export interface AwsConfig {
   s3Bucket: string;
   s3AccessKey: string;
   s3SecretAccessKey: string;
+}
+
+export interface PersonalizeConfig {
+  region: string;
+  trackingId: string;
+  campaignArn: string;
 }

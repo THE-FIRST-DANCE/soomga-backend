@@ -12,6 +12,8 @@ export interface GuidePaginationOptions {
   orderBy?: GuideOrderBy;
   sort?: GuideSort;
   followerId?: number;
+  keyword?: string;
+  guideIds?: number[];
 }
 
 export interface GuideReviewPaginationOptions {

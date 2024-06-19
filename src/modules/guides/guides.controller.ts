@@ -37,16 +37,22 @@ import {
   GuideSort,
 } from './guides.interface';
 import { ParseGenderPipe } from './guides.pipe';
-import { GuidePagination } from './guides.decorator';
+import { GuideFilter, GuidePagination } from './guides.decorator';
 import { User } from '../auth/auth.decorator';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { AuthPayload } from 'src/interfaces/auth.interface';
+import { TrackingId } from 'src/shared/decorators/personalize.decorator';
+import { PersonalizeService } from '../personalize/personalize.service';
 
 @ApiTags('가이드 API')
 @Controller('guides')
 export class GuidesController {
-  constructor(private readonly guidesService: GuidesService) {}
+  constructor(
+    private readonly guidesService: GuidesService,
+    private readonly personalizeService: PersonalizeService,
+  ) {}
 
   @Get()
   @UseGuards(AuthAdminGuard)
@@ -82,6 +88,7 @@ export class GuidesController {
     @Query('score', ParseIntArrayPipe) score?: number[],
     @Query('orderBy') orderBy?: GuideOrderBy,
     @Query('sort') sort?: GuideSort,
+    @Query('keyword') keyword?: string,
   ) {
     const options: GuidePaginationOptions = {
       gender,
@@ -94,9 +101,56 @@ export class GuidesController {
       score,
       orderBy,
       sort,
+      keyword,
     };
 
     return this.guidesService.paginate(cursor, limit, options);
+  }
+
+  @Get('count')
+  @ApiOperation({
+    summary: '가이드 수 조회',
+    description: '가이드의 수를 조회합니다.',
+  })
+  @GuideFilter()
+  async count(
+    @Query('gender', ParseGenderPipe) gender?: Gender,
+    @Query('age', ParseRangePipe) age?: { min: number; max: number },
+    @Query('guideCount', ParseRangePipe)
+    guideCount?: { min: number; max: number },
+    @Query('temperature', ParseRangePipe)
+    temperature?: { min: number; max: number },
+    @Query('areas', ParseIntArrayPipe) areas?: number[],
+    @Query('languages', ParseIntArrayPipe) languages?: number[],
+    @Query('languageCertifications', ParseIntArrayPipe)
+    languageCertifications?: number[],
+    @Query('score', ParseIntArrayPipe) score?: number[],
+  ) {
+    const options: GuidePaginationOptions = {
+      gender,
+      age,
+      guideCount,
+      temperature,
+      areas,
+      languages,
+      languageCertifications,
+      score,
+    };
+    return this.guidesService.count(options);
+  }
+
+  // FIXME: 어색한 route, paginate 메서드를 쓰나, 이 라우드에서는 페이지네이션을 하지 않는 기능임 -> 수정 필요 / 기능은 구현되어있음
+  @Get('recommendations/:userId')
+  @ApiOperation({
+    summary: '가이드 추천',
+    description: '가이드를 추천합니다.',
+  })
+  async getRecommendations(@Param('userId') userId: string) {
+    const guideIds = await this.personalizeService.getRecommendations({
+      userId,
+    });
+
+    return this.guidesService.getGuidesByIds(guideIds);
   }
 
   @Get(':id')
@@ -104,7 +158,11 @@ export class GuidesController {
     summary: '아이디로 가이드 조회',
     description: '특정 아이디를 가진 가이드의 정보를 조회합니다.',
   })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @TrackingId() trackingId?: string) {
+    if (trackingId) {
+      this.personalizeService.clickEvent(trackingId, +id);
+    }
+
     return this.guidesService.findOne(+id);
   }
 
@@ -149,12 +207,10 @@ export class GuidesController {
   })
   async createReview(
     @Param('guideId') guideId: string,
-    @User() user: Member,
+    @User() { sub: reviewerId }: AuthPayload,
     @Body() createReviewDto: CreateReviewDto,
     @Res() res: Response,
   ) {
-    const { id: reviewerId } = user;
-
     await this.guidesService.createReview(
       +guideId,
       +reviewerId,
@@ -173,12 +229,10 @@ export class GuidesController {
   })
   async updateReview(
     @Param('reviewId') reviewId: string,
-    @User() user: Member,
+    @User() { sub: reviewerId }: AuthPayload,
     @Body() updateReviewDto: UpdateReviewDto,
     @Res() res: Response,
   ) {
-    const { id: reviewerId } = user;
-
     await this.guidesService.updateReview(
       +reviewId,
       +reviewerId,
@@ -197,11 +251,9 @@ export class GuidesController {
   })
   async deleteReview(
     @Param('reviewId') reviewId: string,
-    @User() user: Member,
+    @User() { sub: reviewerId }: AuthPayload,
     @Res() res: Response,
   ) {
-    const { id: reviewerId } = user;
-
     await this.guidesService.deleteReview(+reviewId, +reviewerId);
 
     return res.json({ message: '리뷰가 삭제되었습니다.' });
@@ -215,11 +267,10 @@ export class GuidesController {
     description: '가이드로 등록합니다.',
   })
   async registerGuide(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() registerGuideDto: RegisterGuideDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
     await this.guidesService.registerGuide(+id, registerGuideDto);
 
     return res.json({ message: '가이드 등록이 완료되었습니다.' });
@@ -233,11 +284,10 @@ export class GuidesController {
     description: '가이드의 활동지역 정보를 수정합니다.',
   })
   async updateAreas(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() { areaIds }: UpdateAreasDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
     await this.guidesService.updateAreas(id, areaIds);
 
     return res.json({ message: '가이드 활동지역 정보가 수정되었습니다.' });
@@ -251,11 +301,10 @@ export class GuidesController {
     description: '가이드의 언어 정보를 수정합니다.',
   })
   async updateLanguage(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() { languageIds }: UpdateLanguagesDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
     await this.guidesService.updateLanguageCertifications(id, languageIds);
 
     return res.json({ message: '가이드 언어 정보가 수정되었습니다.' });
@@ -269,11 +318,10 @@ export class GuidesController {
     description: '가이드의 언어 자격증 정보를 수정합니다.',
   })
   async updateLanguageCertifications(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() { languageCertificationIds }: UpdateLanguageCertificationsDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
     await this.guidesService.updateLanguageCertifications(
       id,
       languageCertificationIds,
@@ -290,11 +338,10 @@ export class GuidesController {
     description: '가이드의 프로필 정보를 수정합니다.',
   })
   async updateProfile(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() updateProfileDto: UpdateProfileDto,
     @Res() res: Response,
   ) {
-    const { id } = user;
     await this.guidesService.updateProfile(id, updateProfileDto);
 
     return res.json({ message: '가이드 서비스 정보가 수정되었습니다.' });
@@ -307,8 +354,7 @@ export class GuidesController {
     summary: '가이드 탈퇴',
     description: '가이드를 탈퇴합니다. 유저로 전환됩니다.',
   })
-  async leaveGuide(@User() user: Member, @Res() res: Response) {
-    const { id } = user;
+  async leaveGuide(@User() { sub: id }: AuthPayload, @Res() res: Response) {
     await this.guidesService.leaveGuide(id);
 
     return res.json({ message: '가이드 탈퇴가 완료되었습니다.' });

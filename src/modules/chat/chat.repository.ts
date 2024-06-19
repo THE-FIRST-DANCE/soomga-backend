@@ -1,22 +1,18 @@
-import { Inject, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Cache } from 'cache-manager';
 import { Content, Message } from '../../interfaces/chat.interface';
-import { ConfigService } from '@nestjs/config';
-import { CacheConfig } from '../../configs/config.interface';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import ErrorMessage from 'src/shared/constants/error-messages.constants';
-import { Reservation } from '@prisma/client';
+import { Reservation, Role } from '@prisma/client';
+import Redis from 'ioredis';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { createLogger } from 'winston';
 
 export class ChatRepository {
-  cacheConfig: CacheConfig;
   constructor(
     private readonly prismaService: PrismaService,
-    @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
-    private readonly configService: ConfigService,
-  ) {
-    this.cacheConfig = this.configService.get<CacheConfig>('cache');
-  }
+    @InjectRedis() private readonly redis: Redis,
+  ) {}
 
   async getRoomList(id: number) {
     const rooms = await this.prismaService.chatroom.findMany({
@@ -148,87 +144,71 @@ export class ChatRepository {
     limit: number,
   ): Promise<Message[]> {
     const roomKey = `chatroom:${roomId}`;
-    const cacheMessages = (
-      (await this.cacheManager.get<Message[]>(roomKey)) || []
-    ).reverse();
+    const lastMessageIndex = +(await this.redis.get(
+      `chatroom:${roomId}:lastMessage`,
+    ));
 
-    const cursorMessageIndex = cursor
-      ? cacheMessages.findIndex((message) => message.id === cursor - 1)
-      : 0;
+    const start = cursor ? cursor - 1 : '+inf';
+    const end = cursor ? cursor - limit : lastMessageIndex - limit;
 
-    if (cursorMessageIndex === -1) {
-      return [];
-    }
+    const raw = await this.redis.zrevrangebyscore(roomKey, start, end);
 
-    const selectedMessages = cacheMessages.slice(
-      cursorMessageIndex,
-      cursorMessageIndex + limit,
-    );
+    const cacheMessages = raw.map((message) =>
+      JSON.parse(message),
+    ) as Message[];
 
-    return selectedMessages;
+    return cacheMessages;
   }
 
   async cacheMessage(roomId: string, message: Message) {
     const roomKey = `chatroom:${roomId}`;
-    const cachedMessages =
-      (await this.cacheManager.get<Message[]>(roomKey)) || [];
+    const nextIndex = (await this.getLastMessageIndex(roomId)) + 1;
 
-    cachedMessages.push(message);
-
-    await this.cacheManager.set(
-      roomKey,
-      cachedMessages,
-      this.cacheConfig.chat.ttl,
-    );
+    await this.redis.zadd(roomKey, nextIndex, JSON.stringify(message));
   }
 
   async cacheMessages(roomId: string, messages: Message[]) {
+    if (!messages.length) return;
+
     const roomKey = `chatroom:${roomId}`;
-    const cachedMessages =
-      (await this.cacheManager.get<Message[]>(roomKey)) || [];
 
-    const newMessages = messages.filter(
-      (message) =>
-        !cachedMessages.find(
-          (cachedMessage) => cachedMessage.id === message.id,
-        ),
-    );
+    console.log('🚀 ~ ChatRepository ~ messages.forEach ~ messages:', messages);
+    const scoreMembers: (string | number)[] = [];
+    messages.forEach((message) => {
+      scoreMembers.push(message.id);
+      scoreMembers.push(JSON.stringify(message));
+    });
 
-    cachedMessages.unshift(...newMessages.reverse());
-
-    await this.cacheManager.set(
-      roomKey,
-      cachedMessages,
-      this.cacheConfig.chat.ttl,
-    );
+    this.redis.zadd(roomKey, ...scoreMembers);
   }
 
   async storeMessages(roomId: string) {
     const roomKey = `chatroom:${roomId}`;
-    const messages = (await this.cacheManager.get<Message[]>(roomKey)) || [];
 
-    const currentMessages = await this.prismaService.chatroomMessage.findMany({
-      where: { chatroomId: roomId },
-      select: { id: true },
-    });
-    const currentMessageIds = new Set(currentMessages.map(({ id }) => id));
+    const raw = await this.redis.zrevrange(roomKey, 0, -1);
 
-    const newMessages = messages.filter(
-      (message) => !currentMessageIds.has(message.id),
+    const cachedMessages = raw.map((message) =>
+      JSON.parse(message),
+    ) as Message[];
+
+    await Promise.all(
+      cachedMessages.map((message) =>
+        this.prismaService.chatroomMessage.upsert({
+          where: { id: message.id },
+          update: {},
+          create: {
+            id: message.id,
+            chatroomId: roomId,
+            memberId: message.sender.id,
+            content: {
+              message: message.content.message,
+              extra: message.content.extra?.toString(),
+            },
+            createdAt: new Date(message.createdAt),
+          },
+        }),
+      ),
     );
-
-    await this.prismaService.chatroomMessage.createMany({
-      data: newMessages.map((message) => ({
-        id: message.id,
-        chatroomId: roomId,
-        memberId: message.sender.id,
-        content: {
-          message: message.content.message,
-          extra: message.content.extra.toString(),
-        },
-        createdAt: new Date(message.createdAt),
-      })),
-    });
   }
 
   async inviteMember(id: number, roomId: string, participants: number[]) {
@@ -280,8 +260,7 @@ export class ChatRepository {
 
   async getLastMessageIndex(roomId: string) {
     const lastMessageIndexKey = `chatroom:${roomId}:lastMessage`;
-    let lastMessageIndex =
-      await this.cacheManager.get<number>(lastMessageIndexKey);
+    let lastMessageIndex = +(await this.redis.get(lastMessageIndexKey));
 
     if (!lastMessageIndex) {
       lastMessageIndex = await this.prismaService.chatroomMessage
@@ -302,30 +281,62 @@ export class ChatRepository {
   async setLastMessageIndex(roomId: string, index: number) {
     const lastMessageIndexKey = `chatroom:${roomId}:lastMessage`;
 
-    await this.cacheManager.set(
-      lastMessageIndexKey,
-      index,
-      this.cacheConfig.chat.ttl,
-    );
+    await this.redis.set(lastMessageIndexKey, index);
   }
 
   async updateReservationMessage(roomId: string, reservation: Reservation) {
     const roomKey = `chatroom:${roomId}`;
-    const messages = await this.cacheManager.get<Message[]>(roomKey);
+    const raw = await this.redis.zrange(roomKey, 0, -1);
 
-    const targetIndex = messages.findIndex((message) => {
+    const cachedMessages = raw.map((message) =>
+      JSON.parse(message),
+    ) as Message[];
+
+    const target = cachedMessages.find((message) => {
       if (
-        message.content.extra &&
-        message.content.extra.type === 'reservation'
+        message.content?.extra &&
+        message.content?.extra.type === 'reservation'
       ) {
         return message.content.extra.data.id === reservation.id;
       }
     });
-    if (targetIndex === -1) {
+    if (!target) {
       throw new NotFoundException(ErrorMessage.NOTFOUND_MESSAGE);
     }
 
-    messages[targetIndex].content.extra.data = reservation;
-    await this.cacheManager.set(roomKey, messages, this.cacheConfig.chat.ttl);
+    await this.redis.zrem(roomKey, target.id, JSON.stringify(target));
+
+    target.content.extra.data = reservation;
+
+    console.log(
+      '🚀 ~ ChatRepository ~ updateReservationMessage ~ target.id:',
+      target.id,
+    );
+    await this.redis.zadd(roomKey, target.id, JSON.stringify(target));
+  }
+
+  ioJoinRoom(roomId: string, clientId: string) {
+    return this.redis.sadd(`chatroom:${roomId}:members`, clientId);
+  }
+
+  ioLeaveRoom(roomId: string, clientId: string) {
+    return this.redis.srem(`chatroom:${roomId}:members`, clientId);
+  }
+
+  async ioLeaveAllRooms(clientId: string) {
+    return this.redis.keys(`chatroom:*:members`).then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          this.redis.srem(key, clientId);
+          this.redis.scard(key).then((members) => {
+            if (!members) {
+              const roomId = key.split(':')[1];
+              console.log('🚀 ~ ioLeaveAllRooms ~ roomId:', roomId);
+              this.storeMessages(roomId);
+            }
+          });
+        }),
+      );
+    });
   }
 }

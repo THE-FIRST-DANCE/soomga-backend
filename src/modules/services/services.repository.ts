@@ -32,4 +32,10 @@ export class ServicesRepository {
       data: updateServiceDto,
     });
   }
+
+  remove(id: number, guideId: number) {
+    return this.prismaService.service.delete({
+      where: { id, guideId },
+    });
+  }
 }

@@ -136,6 +136,11 @@ export class PlansRepository {
 
   // 결과 데이터 포맷팅
   private formatResponseData(response, period, i, list, isCar) {
+    console.log(
+      '🚀 ~ PlansRepository ~ formatResponseData ~ response:',
+      response,
+    );
+
     if (isCar) {
       return response.routes.map((route, index) => ({
         period,

@@ -18,6 +18,7 @@ import { Response } from 'express';
 import { Member } from '@prisma/client';
 import { AuthDeletedGuard, AuthMemberGuard } from '../auth/auth.guard';
 import { User } from '../auth/auth.decorator';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 
 @ApiTags('멤버 API')
 @Controller('members')
@@ -48,8 +49,7 @@ export class MembersController {
   })
   @Get('leave')
   @UseGuards(AuthMemberGuard)
-  async leave(@User() user: Member, @Res() res: Response) {
-    const { id } = user;
+  async leave(@User() { sub: id }: AuthPayload, @Res() res: Response) {
     await this.membersService.leave(id);
 
     return res.json({ message: '탈퇴 처리가 완료되었습니다.' });
@@ -61,8 +61,7 @@ export class MembersController {
   })
   @Get('comeback')
   @UseGuards(AuthDeletedGuard)
-  async comback(@User() user: Member, @Res() res: Response) {
-    const { id } = user;
+  async comback(@User() { sub: id }: AuthPayload, @Res() res: Response) {
     await this.membersService.comeback(id);
 
     return res.json({ message: '복귀 처리가 완료되었습니다.' });
@@ -114,11 +113,10 @@ export class MembersController {
   @Get(':followingId/follow')
   @UseGuards(AuthMemberGuard)
   async follow(
-    @User() user: Member,
+    @User() { sub: followerId }: AuthPayload,
     @Param('followingId') followingId: string,
     @Res() res: Response,
   ) {
-    const { id: followerId } = user;
     const isFollowing = await this.membersService.followToggle(
       +followingId,
       +followerId,

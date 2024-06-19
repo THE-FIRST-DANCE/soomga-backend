@@ -8,7 +8,11 @@ import { JwtService } from '@nestjs/jwt';
 import { MembersService } from '../members/members.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { AuthCodePayload, OAuthProfile } from '../../interfaces/auth.interface';
+import {
+  AuthCodePayload,
+  AuthPayload,
+  OAuthProfile,
+} from '../../interfaces/auth.interface';
 import ErrorMessage from '../../shared/constants/error-messages.constants';
 import { AuthHelpers } from '../../shared/helpers/auth.helpers';
 import { OAuthSignUpDto } from './dto/oauth-sign-up.dto';
@@ -87,10 +91,8 @@ export class AuthService {
 
     const authCode = AuthHelpers.generateAuthCode();
 
-    const key = randomUUID();
-
     const authCodePayload: AuthCodePayload = {
-      key,
+      key: phoneNumber,
       value: phoneNumber,
       sub: memberId,
       authCode,

@@ -1,8 +1,8 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
-import { Member } from '@prisma/client';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 
 export const User = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): Member => {
+  (data: unknown, ctx: ExecutionContext): AuthPayload => {
     const request = ctx.switchToHttp().getRequest();
     return request.user;
   },
