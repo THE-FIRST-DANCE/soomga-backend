@@ -51,7 +51,7 @@ export class ReservationsService {
     reservationId: number,
     updateReservationDto: UpdateReservationDto,
   ) {
-    await this.verifyGuideOwnReservation(guideId, reservationId);
+    // await this.verifyGuideOwnReservation(guideId, reservationId);
 
     return this.reservationsRepository.updateReservation(
       reservationId,
@@ -64,7 +64,7 @@ export class ReservationsService {
     reservationId: number,
     options?: { roomId?: string },
   ) {
-    await this.verifyMemberOwnReservation(memberId, reservationId);
+    // await this.verifyMemberOwnReservation(memberId, reservationId);
 
     const reservation =
       await this.reservationsRepository.updateStatusReservation(
@@ -84,7 +84,7 @@ export class ReservationsService {
     reservationId: number,
     options?: { roomId?: string },
   ) {
-    await this.verifyMemberOwnReservation(memberId, reservationId);
+    // await this.verifyMemberOwnReservation(memberId, reservationId);
 
     const reservation =
       await this.reservationsRepository.updateStatusReservation(

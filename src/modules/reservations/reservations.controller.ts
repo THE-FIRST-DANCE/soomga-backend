@@ -70,7 +70,7 @@ export class ReservationsController {
 
   @Patch(':reservationId/accept')
   @ApiBearerAuth()
-  @UseGuards(AuthMemberGuard)
+  @UseGuards(AuthGuideGuard)
   @ApiOperation({
     summary: '예약 수락',
     description: '가이드의 예약을 수락합니다.',
@@ -89,7 +89,7 @@ export class ReservationsController {
 
   @Patch(':reservationId/reject')
   @ApiBearerAuth()
-  @UseGuards(AuthMemberGuard)
+  @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '예약 거절',
     description: '가이드의 예약을 거절합니다.',
