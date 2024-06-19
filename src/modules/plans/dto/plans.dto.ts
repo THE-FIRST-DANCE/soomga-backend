@@ -1,5 +1,11 @@
 import { Place } from '@prisma/client';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 interface PlanConfirmList {
   item: Place;
@@ -57,4 +63,36 @@ export class PlanCommentDto {
   @IsString()
   @IsNotEmpty()
   content: string;
+}
+
+export class PlanExecuteDto {
+  @IsNumber()
+  @IsNotEmpty()
+  planId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  memberId: number;
+}
+
+export class ExecuteActivityDto {
+  @IsNumber()
+  @IsNotEmpty()
+  executedPlanId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  scheduleId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  memberId: number;
+
+  @IsString()
+  @IsOptional()
+  note: string;
+
+  @IsArray()
+  @IsOptional()
+  photos: string[];
 }

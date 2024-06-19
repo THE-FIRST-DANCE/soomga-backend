@@ -4,7 +4,12 @@ import { GoogleHttpService } from 'src/modules/common/http/google-http.service';
 import { KakaoHttpService } from 'src/modules/common/http/kakao-http.service';
 import { OrtoolsService } from 'src/modules/common/http/ortools.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { PlanAddDto, PlanCommentDto } from './dto/plans.dto';
+import {
+  ExecuteActivityDto,
+  PlanAddDto,
+  PlanCommentDto,
+  PlanExecuteDto,
+} from './dto/plans.dto';
 import { Plan } from '@prisma/client';
 
 @Injectable()
@@ -495,6 +500,16 @@ export class PlansRepository {
               member: true,
             },
           },
+          executedPlan: {
+            include: {
+              author: true,
+              executedActivity: {
+                include: {
+                  schedule: true,
+                },
+              },
+            },
+          },
         },
       });
     } catch (error) {
@@ -566,5 +581,87 @@ export class PlansRepository {
         id: commentId,
       },
     });
+  }
+
+  // 플랜 id 와 일차로 일과 가져오기
+  getPlanWithDaySchedules(planId: number, period: number) {
+    return this.prismaService.plan.findUnique({
+      where: {
+        id: planId,
+      },
+      include: {
+        daySchedules: {
+          where: {
+            day: period,
+          },
+          include: {
+            schedules: {
+              include: {
+                item: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // 플랜 실행
+  async executePlan(planId: number, memberId: number) {
+    const existingExecutedPlan =
+      await this.prismaService.executedPlan.findFirst({
+        where: {
+          planId,
+          authorId: memberId,
+        },
+      });
+
+    if (existingExecutedPlan) {
+      return existingExecutedPlan.id;
+    } else {
+      // 해당 planId와 authorId를 가진 데이터가 없을 경우 새로운 executedPlan 생성
+      const newExecutedPlan = await this.prismaService.executedPlan.create({
+        data: {
+          planId,
+          authorId: memberId,
+        },
+      });
+      return newExecutedPlan.id;
+    }
+  }
+
+  // 플랜 일과 실행
+  async executedActivity(data: ExecuteActivityDto) {
+    const existingExecutedActivity =
+      await this.prismaService.executedActivity.findFirst({
+        where: {
+          executedPlanId: data.executedPlanId,
+          scheduleId: data.scheduleId,
+        },
+      });
+
+    if (existingExecutedActivity) {
+      // 이미 실행된 일과가 있을 경우 업데이트
+      return this.prismaService.executedActivity.update({
+        where: {
+          id: existingExecutedActivity.id,
+        },
+        data: {
+          note: data.note,
+          photos: data.photos,
+        },
+      });
+    } else {
+      // 실행된 일과가 없을 경우 새로 생성
+      return this.prismaService.executedActivity.create({
+        data: {
+          authorId: data.memberId,
+          scheduleId: data.scheduleId,
+          executedPlanId: data.executedPlanId,
+          note: data.note,
+          photos: data.photos,
+        },
+      });
+    }
   }
 }

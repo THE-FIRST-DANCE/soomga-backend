@@ -9,7 +9,12 @@ import {
 } from '@nestjs/common';
 import { PlansService } from './plans.service';
 import { PlanDistance } from 'src/interfaces/google.interface';
-import { PlanAddDto, PlanCommentDto } from './dto/plans.dto';
+import {
+  ExecuteActivityDto,
+  PlanAddDto,
+  PlanCommentDto,
+  PlanExecuteDto,
+} from './dto/plans.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Plan } from '@prisma/client';
 import { ParseIntWithDefaultPipe } from '../../shared/pagination/pagination.pipe';
@@ -131,5 +136,40 @@ export class PlansController {
     @Param('commentId', ParseIntWithDefaultPipe) commentId: number,
   ) {
     return this.plansService.deleteComment(commentId);
+  }
+
+  // 플랜 id 와 일차로 일과 가져오기
+  @ApiOperation({
+    summary: '플랜 일과 가져오기',
+    description: '플랜의 일과를 가져옵니다.',
+  })
+  @Get(':planId/:period')
+  getPlanWithDaySchedules(
+    @Param('planId', ParseIntWithDefaultPipe) planId: number,
+    @Param('period', ParseIntWithDefaultPipe) period: number,
+  ) {
+    return this.plansService.getPlanWithDaySchedules(planId, period);
+  }
+
+  // 플랜 실행
+  @ApiOperation({
+    summary: '플랜 실행',
+    description: '플랜을 실행합니다.',
+  })
+  @Post('execute')
+  executePlan(
+    @Body() { planId, memberId }: { planId: number; memberId: number },
+  ) {
+    return this.plansService.executePlan(planId, memberId);
+  }
+
+  // 플랜 일과 실행
+  @ApiOperation({
+    summary: '플랜 일과 실행',
+    description: '플랜의 일과를 실행합니다.',
+  })
+  @Post('activity/execute')
+  async executeActivity(@Body() data: ExecuteActivityDto) {
+    return this.plansService.executeActivity(data);
   }
 }
