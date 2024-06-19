@@ -3,11 +3,11 @@ import { IsDateString, IsNumber } from 'class-validator';
 
 export class CreateReservationDto {
   @ApiProperty({
-    description: '예약한 회원의 ID',
+    description: '회원이 예약한 가이드의 ID',
     example: 1,
   })
   @IsNumber()
-  memberId: number;
+  guideId: number;
 
   @ApiProperty({
     description: '예약한 서비스의 ID',

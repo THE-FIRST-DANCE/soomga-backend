@@ -31,17 +31,12 @@ export class ReservationsService {
   }
 
   async reserveService(
-    guideId: number,
+    memberId: number,
     reserveServiceDto: CreateReservationDto,
     options?: { roomId?: string },
   ) {
-    await this.servicesService.validateOwnershipService(
-      guideId,
-      reserveServiceDto.serviceId,
-    );
-
     const reservation = await this.reservationsRepository.createReservation(
-      guideId,
+      memberId,
       reserveServiceDto,
     );
 

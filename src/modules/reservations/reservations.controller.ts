@@ -8,7 +8,11 @@ import {
   Query,
   Get,
 } from '@nestjs/common';
-import { AuthGuideGuard, AuthMemberGuard } from '../auth/auth.guard';
+import {
+  AuthGuideGuard,
+  AuthMemberGuard,
+  AuthUserGuard,
+} from '../auth/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from '../auth/auth.decorator';
 import { Member } from '@prisma/client';
@@ -24,13 +28,13 @@ export class ReservationsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuideGuard)
+  @UseGuards(AuthUserGuard)
   @ApiOperation({
     summary: '서비스 예약',
     description: '가이드의 서비스를 예약합니다.',
   })
   async reserveService(
-    @User() { sub: guideId }: AuthPayload,
+    @User() { sub: memberId }: AuthPayload,
     @Body() reserveServiceDto: CreateReservationDto,
     @Query('roomId') roomId?: string,
   ) {
@@ -39,7 +43,7 @@ export class ReservationsController {
     };
 
     return this.reservationsService.reserveService(
-      guideId,
+      memberId,
       reserveServiceDto,
       options,
     );

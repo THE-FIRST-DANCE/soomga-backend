@@ -15,10 +15,10 @@ export class ReservationsRepository {
     });
   }
 
-  createReservation(guideId: number, reserveServiceDto: CreateReservationDto) {
+  createReservation(memberId: number, reserveServiceDto: CreateReservationDto) {
     return this.prismaService.reservation.create({
       data: {
-        guideId,
+        memberId,
         ...reserveServiceDto,
       },
       include: { service: true },
