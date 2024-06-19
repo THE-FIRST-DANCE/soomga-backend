@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { redisStore } from 'cache-manager-redis-yet';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,19 +15,20 @@ import { AdminModule } from '../admin/admin.module';
 import { HealthModule } from '../health/health.module';
 import { EventsModule } from '../events/events.module';
 import { ChatModule } from '../chat/chat.module';
-import { CacheConfig, RedisConfig } from '../../configs/config.interface';
+import { RedisConfig } from '../../configs/config.interface';
 import { BoardsModule } from '../boards/boards.module';
 import { TagsModule } from '../tags/tags.module';
 import { PlansModule } from '../plans/plans.module';
 
 import { GLOBAL_CONFIG } from '../../configs/global.config';
-import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { UploadsModule } from '../uploads/uploads.module';
 import { envValidateSchema } from 'src/configs/env-validate.schema';
 import { AreasModule } from '../areas/areas.module';
 import { MypageModule } from '../mypage/mypage.module';
 import { ServicesModule } from '../services/services.module';
 import { ReservationsModule } from '../reservations/reservations.module';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { PersonalizeModule } from '../personalize/personalize.module';
 
 @Module({
   imports: [
@@ -50,30 +50,25 @@ import { ReservationsModule } from '../reservations/reservations.module';
     ChatModule,
     ServicesModule,
     ReservationsModule,
-    CacheModule.registerAsync({
-      isGlobal: true,
-      useFactory: async (
-        configService: ConfigService,
-      ): Promise<CacheModuleOptions> => {
-        const redisConfig = configService.get<RedisConfig>('redis');
-        const cacheConfig = configService.get<CacheConfig>('cache');
-        try {
-          const redis = await redisStore({
-            ttl: cacheConfig.ttl,
-            socket: {
-              host: redisConfig.host,
-              port: redisConfig.port,
-              tls: process.env.NODE_ENV === 'production' ? true : false,
-            },
-          });
-          return { store: redis };
-        } catch (error) {
-          console.error(
-            'Failed to connect to Redis, using in-memory cache instead.',
-            error,
-          );
-          return { store: 'memory', ttl: cacheConfig.ttl };
-        }
+    PersonalizeModule,
+    RedisModule.forRootAsync({
+      useFactory: (configService: ConfigService) => {
+        const { host, port } = configService.get<RedisConfig>('redis');
+
+        const tlsOptions =
+          process.env.NODE_ENV === 'production'
+            ? { rejectUnauthorized: false }
+            : undefined;
+
+        return {
+          type: 'single',
+          url: `redis://${host}:${port}`,
+          options: {
+            host,
+            port,
+            tls: tlsOptions,
+          },
+        };
       },
       inject: [ConfigService],
     }),

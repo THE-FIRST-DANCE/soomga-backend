@@ -5,17 +5,17 @@ import * as process from 'process';
 export const GLOBAL_CONFIG: Config = {
   nest: {
     port: process.env.APP_PORT || 3000,
-    name: process.env.APP_NAME || 'Soomga',
+    name: process.env.APP_NAME || 'Default API Name',
   },
   cors: {
     enabled: true,
   },
   swagger: {
     enabled: process.env.NODE_ENV !== 'production',
-    title: 'Soomga API',
-    description: 'The Soomga API description',
+    title: process.env.SWAGGER_TITLE || 'Default API',
+    description: process.env.SWAGGER_DESCRIPTION || 'Default API description',
     version: packageJson.version || '0.0.0',
-    path: '/api/v1',
+    path: process.env.SWAGGER_PATH || '/api/v1',
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
@@ -37,7 +37,7 @@ export const GLOBAL_CONFIG: Config = {
     backendUrl: process.env.BACKEND_URL || 'http://localhost:3000',
     loadBalancerUrl:
       process.env.FRONTEND_URL.split(',').shift() || 'http://localhost:3000',
-    mobileUrl: process.env.MOBILE_REDIRECT_URL || 'exp://192.168.0.20:8081',
+    mobileUrl: process.env.MOBILE_REDIRECT_URL || 'exp://192.168.0.46:8081',
   },
   cache: {
     ttl: +process.env.CACHE_TTL || 30_000,
@@ -51,5 +51,10 @@ export const GLOBAL_CONFIG: Config = {
     s3Bucket: process.env.AWS_S3_BUCKET,
     s3AccessKey: process.env.AWS_S3_ACCESS_KEY,
     s3SecretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
+  },
+  personalize: {
+    region: process.env.PERSONALIZE_REGION || 'ap-northeast-2',
+    trackingId: process.env.PERSONALIZE_TRACKING_ID,
+    campaignArn: process.env.PERSONALIZE_CAMPAIGN_ARN,
   },
 };

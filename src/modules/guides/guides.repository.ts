@@ -65,31 +65,21 @@ export class GuidesRepository {
           member: {
             include: {
               languages: {
-                select: {
-                  language: true,
-                },
+                select: { language: true },
               },
               tags: {
-                select: {
-                  tag: true,
-                },
+                select: { tag: true },
               },
             },
           },
           areas: {
-            select: {
-              area: true,
-            },
+            select: { area: true },
           },
           languageCertifications: {
-            select: {
-              languageCertification: true,
-            },
+            select: { languageCertification: true },
           },
           _count: {
-            select: {
-              reviews: true,
-            },
+            select: { reviews: true },
           },
         },
       });
@@ -161,6 +151,8 @@ export class GuidesRepository {
       score,
       temperature,
       followerId,
+      keyword,
+      guideIds,
     } = options;
 
     const whereCondition: Prisma.GuideProfileWhereInput = {
@@ -175,6 +167,13 @@ export class GuidesRepository {
           in: matchingAvgScores.map((score) => score.guideId),
         },
       };
+    }
+    if (guideIds) {
+      whereCondition.id = { in: guideIds };
+    }
+
+    if (keyword) {
+      whereCondition.member.nickname = { contains: keyword };
     }
 
     if (cursor) {
@@ -499,6 +498,17 @@ export class GuidesRepository {
     });
   }
 
+  countGuides(options?: GuidePaginationOptions) {
+    const whereCondition = this.buildWhereCondition(
+      undefined,
+      undefined,
+      options,
+    );
+    return this.prismaService.guideProfile.count({
+      where: whereCondition,
+    });
+  }
+
   findReview(reviewId: number) {
     return this.prismaService.guideReview.findUnique({
       where: { id: reviewId },
@@ -527,6 +537,38 @@ export class GuidesRepository {
   getReservations(guideId: number) {
     return this.prismaService.reservation.findMany({
       where: { guideId },
+    });
+  }
+
+  getGuides(ids: number[]) {
+    return this.prismaService.member.findMany({
+      where: { id: { in: ids } },
+      include: {
+        guideProfile: {
+          include: {
+            areas: {
+              select: { area: true },
+            },
+            languageCertifications: {
+              select: {
+                languageCertification: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        languages: {
+          select: {
+            language: true,
+          },
+        },
+        tags: { include: { tag: { select: { id: true, name: true } } } },
+        plans: true,
+      },
     });
   }
 }

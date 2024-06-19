@@ -11,6 +11,7 @@ import { UpdateNicknameDto } from './dto/update-nickname.dto';
 import { UpdateEmailDto } from './dto/update-email.dto';
 import { Pagination } from 'src/shared/decorators/pagination.decorator';
 import { ParseIntWithDefaultPipe } from 'src/shared/pagination/pagination.pipe';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 
 @ApiTags('마이페이지 API')
 @Controller('mypage')
@@ -20,16 +21,14 @@ export class MyPageController {
   @Get()
   @UseGuards(AuthMemberGuard)
   @ApiOperation({ summary: '마이페이지 정보 가져오기' })
-  async mypage(@User() user: Member) {
-    const { id } = user;
+  async mypage(@User() { sub: id }: AuthPayload) {
     return this.myPageService.findOne(id);
   }
 
   @Get('plans')
   @UseGuards(AuthMemberGuard)
   @ApiOperation({ summary: '나의 플랜 가져오기' })
-  async myPlans(@User() user: Member) {
-    const { id } = user;
+  async myPlans(@User() { sub: id }: AuthPayload) {
     return this.myPageService.findPlans(id);
   }
 
@@ -37,20 +36,17 @@ export class MyPageController {
   @UseGuards(AuthMemberGuard)
   @ApiOperation({ summary: '이메일 인증 코드 보내기' })
   async sendEmailAuthCode(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() updateEmailDto: UpdateEmailDto,
-  ) {
-    const { id } = user;
-  }
+  ) {}
 
   @Patch('email')
   @UseGuards(AuthMemberGuard)
   @ApiOperation({ summary: '이메일 업데이트' })
   async updateEmail(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() updateEmailDto: UpdateEmailDto,
   ) {
-    const { id } = user;
     return this.myPageService.updateEmail(id, updateEmailDto);
   }
 
@@ -58,10 +54,9 @@ export class MyPageController {
   @UseGuards(AuthMemberGuard)
   @ApiOperation({ summary: '닉네임 업데이트' })
   async updateNickname(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() updateNicknameDto: UpdateNicknameDto,
   ) {
-    const { id } = user;
     return this.myPageService.updateNickname(id, updateNicknameDto);
   }
 
@@ -69,10 +64,9 @@ export class MyPageController {
   @UseGuards(AuthMemberGuard)
   @ApiOperation({ summary: '비밀번호 업데이트' })
   async updatePassword(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    const { id } = user;
     return this.myPageService.updatePassword(id, updatePasswordDto);
   }
 
@@ -81,11 +75,10 @@ export class MyPageController {
   @Pagination()
   @ApiOperation({ summary: '내 가이드 리뷰 가져오기' })
   async getMyGuideReviews(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
     @Query('limit', ParseIntWithDefaultPipe) limit?: number,
   ) {
-    const { id } = user;
     return this.myPageService.getMyGuideReviews(id, cursor, limit);
   }
 
@@ -94,11 +87,10 @@ export class MyPageController {
   @Pagination()
   @ApiOperation({ summary: '내 팔로우 가져오기' })
   async getMyFollows(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Query('cursor', ParseIntWithDefaultPipe) cursor?: number,
     @Query('limit', ParseIntWithDefaultPipe) limit?: number,
   ) {
-    const { id } = user;
     return this.myPageService.getMyFollows(id, cursor, limit);
   }
 }

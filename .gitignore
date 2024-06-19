@@ -58,3 +58,6 @@ lerna-debug.log*
 
 # ERD
 /prisma/*erd*.svg
+
+
+import-job/*.csv

@@ -86,10 +86,13 @@ function createGuideReview(): Prisma.GuideReviewCreateInput {
 }
 
 export async function guideSeed(client: TransactionClient) {
-  const fakerGuides = Array.from({ length: 30 }, createGuide);
+  const fakerGuides = Array.from({ length: 200 }, createGuide);
 
   const memberData = await hashMembersPassword(fakerGuides);
 
+  // client.member.createMany({
+  //   data: memberData,
+  // });
   await Promise.all(
     memberData.map((member) => {
       return client.member.create({

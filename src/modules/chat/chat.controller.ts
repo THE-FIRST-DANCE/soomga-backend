@@ -24,6 +24,7 @@ import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { CreateReservationDto } from '../reservations/dto/create-reservation';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 
 @ApiTags('채팅 API')
 @Controller('chat')
@@ -34,8 +35,7 @@ export class ChatController {
   @UseGuards(AuthMemberGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get the list of chat rooms' })
-  async getRoomList(@User() user: Member) {
-    const { id } = user;
+  async getRoomList(@User() { sub: id }: AuthPayload) {
     return this.chatService.getRoomList(id);
   }
 
@@ -43,8 +43,10 @@ export class ChatController {
   @UseGuards(AuthMemberGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new chat room' })
-  async createRoom(@User() user: Member, @Body() createRoomDto: CreateRoomDto) {
-    const { id } = user;
+  async createRoom(
+    @User() { sub: id }: AuthPayload,
+    @Body() createRoomDto: CreateRoomDto,
+  ) {
     return this.chatService.createRoom(id, createRoomDto);
   }
 
@@ -54,10 +56,9 @@ export class ChatController {
   @ApiOperation({ summary: 'Update a chat room' })
   async updateRoom(
     @Param('roomId') roomId: string,
-    @User() user: Member,
+    @User() { sub: memberId }: AuthPayload,
     @Body() updateRoomDto: UpdateRoomDto,
   ) {
-    const { id: memberId } = user;
     return this.chatService.updateRoom(roomId, memberId, updateRoomDto);
   }
 
@@ -103,11 +104,10 @@ export class ChatController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Invite a member to a specific chat room' })
   async inviteMember(
-    @User() user: Member,
+    @User() { sub: id }: AuthPayload,
     @Param('roomId') roomId: string,
     @Body() inviteMemberDto: InviteMemberDto,
   ) {
-    const { id } = user;
     return this.chatService.inviteMember(id, roomId, inviteMemberDto);
   }
 
@@ -115,8 +115,10 @@ export class ChatController {
   @UseGuards(AuthMemberGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Leave a specific chat room' })
-  async leaveRoom(@User() user: Member, @Param('roomId') roomId: string) {
-    const { id } = user;
+  async leaveRoom(
+    @User() { sub: id }: AuthPayload,
+    @Param('roomId') roomId: string,
+  ) {
     return this.chatService.leaveRoom(roomId, id);
   }
 }

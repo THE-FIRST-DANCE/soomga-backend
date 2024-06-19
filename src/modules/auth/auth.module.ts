@@ -22,7 +22,6 @@ import { LineMobileStrategy } from './auth.lineMobile.strategy';
     PrismaModule,
     CoolsmsModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

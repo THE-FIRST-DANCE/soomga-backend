@@ -6,18 +6,23 @@ import { areaSeed } from './area.seed';
 import { guideSeed } from './guide.seed';
 import { defaultMemberSeed } from './default-member.seed';
 import { tagSeed } from './tag.seed';
+import { tripSeed } from './trip.seed';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  prisma.$transaction(async (prisma) => {
-    await defaultMemberSeed(prisma);
-    await areaSeed(prisma);
-    await languageSeed(prisma);
-    await memberSeed(prisma);
-    await guideSeed(prisma);
-    await tagSeed(prisma);
-  });
+  prisma.$transaction(
+    async (prisma) => {
+      await defaultMemberSeed(prisma);
+      await areaSeed(prisma);
+      await languageSeed(prisma);
+      await memberSeed(prisma);
+      await guideSeed(prisma);
+      await tagSeed(prisma);
+      await tripSeed(prisma);
+    },
+    { timeout: 100000 },
+  );
 }
 main()
   .then(async () => {

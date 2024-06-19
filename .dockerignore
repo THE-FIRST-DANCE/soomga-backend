@@ -1,0 +1,10 @@
+dist
+.vscode
+data
+pgadmin4
+redis
+storage
+test
+node_modules
+.env
+docker-compose*.yml

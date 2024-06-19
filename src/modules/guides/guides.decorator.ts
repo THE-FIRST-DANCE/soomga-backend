@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 import { GuideOrderBy, GuideSort } from './guides.interface';
 
-export function GuidePagination() {
+export function GuideFilter() {
   return applyDecorators(
     ApiQuery({
       name: 'gender',
@@ -50,6 +50,17 @@ export function GuidePagination() {
       example: '0,1',
       required: false,
     }),
+    ApiQuery({
+      name: 'keyword',
+      type: 'string',
+      required: false,
+    }),
+  );
+}
+
+export function GuidePagination() {
+  return applyDecorators(
+    GuideFilter(),
     ApiQuery({
       name: 'orderBy',
       type: 'string',

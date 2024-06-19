@@ -7,6 +7,8 @@ import ChatGateway from './chat.gateway';
 import { AuthModule } from '../auth/auth.module';
 import { AuthRepository } from '../auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
 
 @Global()
 @Module({

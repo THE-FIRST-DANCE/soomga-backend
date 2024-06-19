@@ -7,7 +7,6 @@ import {
 import { ChatRepository } from './chat.repository';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { createPageResponse } from '../../shared/pagination/pagination.utils';
-import { Cache } from 'cache-manager';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import ErrorMessage from 'src/shared/constants/error-messages.constants';
@@ -22,8 +21,6 @@ export class ChatService {
   nest: NestConfig;
   constructor(
     private readonly chatRepository: ChatRepository,
-    @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
-    // @Inject('IO_SERVER') private readonly ioServer: Server,
     private readonly chatGateway: ChatGateway,
     private readonly configService: ConfigService,
   ) {

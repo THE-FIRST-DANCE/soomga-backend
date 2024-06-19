@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Query,
+  Get,
 } from '@nestjs/common';
 import { AuthGuideGuard, AuthMemberGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -14,6 +15,7 @@ import { Member } from '@prisma/client';
 import { CreateReservationDto } from './dto/create-reservation';
 import { UpdateReservationDto } from './dto/update-reservation';
 import { ReservationsService } from './reservations.service';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 
 @ApiTags('예약 API')
 @Controller('reservations')
@@ -28,11 +30,10 @@ export class ReservationsController {
     description: '가이드의 서비스를 예약합니다.',
   })
   async reserveService(
-    @User() user: Member,
+    @User() { sub: guideId }: AuthPayload,
     @Body() reserveServiceDto: CreateReservationDto,
     @Query('roomId') roomId?: string,
   ) {
-    const { id: guideId } = user;
     const options = {
       roomId,
     };
@@ -52,11 +53,10 @@ export class ReservationsController {
     description: '가이드의 예약을 수정합니다.',
   })
   async updateReservation(
-    @User() user: Member,
+    @User() { sub: guideId }: AuthPayload,
     @Param('reservationId') reservationId: number,
     @Body() updateReservationDto: UpdateReservationDto,
   ) {
-    const { id: guideId } = user;
     return this.reservationsService.updateReservation(
       guideId,
       reservationId,
@@ -72,11 +72,10 @@ export class ReservationsController {
     description: '가이드의 예약을 수락합니다.',
   })
   async acceptReservation(
-    @User() user: Member,
+    @User() { sub: memberId }: AuthPayload,
     @Param('reservationId') reservationId: string,
     @Query('roomId') roomId?: string,
   ) {
-    const { id: memberId } = user;
     return this.reservationsService.acceptReservation(
       memberId,
       +reservationId,
@@ -92,11 +91,10 @@ export class ReservationsController {
     description: '가이드의 예약을 거절합니다.',
   })
   async rejectReservation(
-    @User() user: Member,
+    @User() { sub: memberId }: AuthPayload,
     @Param('reservationId') reservationId: string,
     @Query('roomId') roomId?: string,
   ) {
-    const { id: memberId } = user;
     return this.reservationsService.rejectReservation(
       memberId,
       +reservationId,
@@ -112,10 +110,9 @@ export class ReservationsController {
     description: '가이드의 예약을 취소합니다.',
   })
   async cancelReservation(
-    @User() user: Member,
+    @User() { sub: memberId }: AuthPayload,
     @Param('reservationId') reservationId: string,
   ) {
-    const { id: memberId } = user;
     return this.reservationsService.cancelReservation(memberId, +reservationId);
   }
 }

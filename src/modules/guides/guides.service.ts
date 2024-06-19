@@ -16,6 +16,7 @@ import {
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { PersonalizeService } from '../personalize/personalize.service';
 
 @Injectable()
 export class GuidesService {
@@ -161,5 +162,13 @@ export class GuidesService {
 
   getReservations(guideId: number) {
     return this.guidesRepository.getReservations(guideId);
+  }
+
+  count(options?: GuidePaginationOptions) {
+    return this.guidesRepository.countGuides(options);
+  }
+
+  getGuidesByIds(ids: number[]) {
+    return this.guidesRepository.getGuides(ids);
   }
 }

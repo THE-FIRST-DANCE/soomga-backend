@@ -49,4 +49,9 @@ export const envValidateSchema: Joi.ObjectSchema<Config> = Joi.object({
     s3AccessKey: Joi.string().required(),
     s3SecretAccessKey: Joi.string().required(),
   }),
+  personalize: Joi.object<Config['personalize']>({
+    region: Joi.string().required(),
+    trackingId: Joi.string().required(),
+    campaignArn: Joi.string().required(),
+  }),
 });

@@ -22,6 +22,8 @@ import { Pagination } from '../../../shared/decorators/pagination.decorator';
 import { ParseIntWithDefaultPipe } from '../../../shared/pagination/pagination.pipe';
 import { ParseIntArrayPipe } from '../../../pipes/ParseIntArrayPipe.service';
 import { CommentDto } from '../sos/dto/comment.dto';
+import { AuthPayload } from 'src/interfaces/auth.interface';
+import { User } from 'src/modules/auth/auth.decorator';
 
 @ApiTags('여행 게시판 API')
 // @UseGuards(AuthJwtGuard)
@@ -34,6 +36,7 @@ export class TripsController {
     summary: '여행 게시글 작성',
     description: '여행 게시글을 작성합니다.',
   })
+  @UseGuards(AuthMemberGuard)
   create(@Body() createTripDto: CreateTripDto) {
     return this.tripsService.create(createTripDto);
   }
@@ -88,13 +91,11 @@ export class TripsController {
   @ApiParam({ name: 'id', type: 'number', description: '좋아요할 게시글의 ID' })
   @UseGuards(AuthMemberGuard)
   async like(
-    @Req() req: { user: Member },
+    @User() { sub: memberId }: AuthPayload,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const { user } = req;
-
-    const result = await this.tripsService.like(+id, user.id);
+    const result = await this.tripsService.like(+id, memberId);
 
     if (result) {
       return res.status(201).json({ message: '좋아요 되었습니다.' });

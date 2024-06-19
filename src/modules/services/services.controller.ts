@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -8,12 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuideGuard } from '../auth/auth.guard';
 import { Member } from '@prisma/client';
 import { User } from '../auth/auth.decorator';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { CreateServiceDto } from './dto/create-services.dto';
+import { AuthPayload } from 'src/interfaces/auth.interface';
 
 @ApiTags('서비스 API')
 @Controller('services')
@@ -22,9 +24,10 @@ export class ServicesController {
 
   @Post()
   @UseGuards(AuthGuideGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: '서비스 생성' })
   create(
-    @User() { id: guideId }: Member,
+    @User() { sub: guideId }: AuthPayload,
     @Body() createServiceDto: CreateServiceDto,
   ) {
     return this.servicesService.create(guideId, createServiceDto);
@@ -44,12 +47,21 @@ export class ServicesController {
 
   @Patch(':id')
   @UseGuards(AuthGuideGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: '서비스 수정' })
   update(
     @Param('id') id: string,
-    @User() { id: guideId }: Member,
+    @User() { sub: guideId }: AuthPayload,
     @Body() updateServiceDto: UpdateServiceDto,
   ) {
     return this.servicesService.update(+id, guideId, updateServiceDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuideGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '서비스 삭제' })
+  remove(@Param('id') id: string, @User() { sub: guideId }: AuthPayload) {
+    return this.servicesService.remove(+id, guideId);
   }
 }

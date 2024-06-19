@@ -31,19 +31,19 @@ async function bootstrap() {
     app.enableCors({
       origin: base.frontendUrl.split(','),
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
+      allowedHeaders: 'Content-Type, Accept, Authorization, Tracking-Id',
       credentials: true,
     });
   }
 
   app.use(cookieParser());
-  app.use(
-    session({
-      secret: security.sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-    }),
-  );
+  // app.use(
+  //   session({
+  //     secret: security.sessionSecret,
+  //     resave: false,
+  //     saveUninitialized: false,
+  //   }),
+  // );
 
   const redisIoAdapter = new RedisIoAdapter(app, redis.host, redis.port);
   await redisIoAdapter.connectToRedis();
@@ -54,6 +54,7 @@ async function bootstrap() {
   swaggerSetup(app);
 
   await app.listen(nest.port);
-  console.log(`Server is running on: ${nest.port}`);
+  const appUrl = await app.getUrl();
+  console.log(`Server is running on: ${appUrl}`);
 }
 bootstrap();
