@@ -56,8 +56,8 @@ export class GuidesRepository {
     );
     const orderBy = this.buildOrderBy(options);
 
-    const guides: GuideProfile[] =
-      await this.prismaService.guideProfile.findMany({
+    const [guides, count] = await Promise.all([
+      this.prismaService.guideProfile.findMany({
         where: whereCondition,
         take: limit,
         orderBy: orderBy,
@@ -82,13 +82,17 @@ export class GuidesRepository {
             select: { reviews: true },
           },
         },
-      });
+      }),
+      this.prismaService.guideProfile.count({
+        where: whereCondition,
+      }),
+    ]);
 
     const result = this.enrichGuides(guides, {
       guidesWithMatchingAvgScores: guideAvgScores,
     });
 
-    return result;
+    return { result, count };
   }
 
   private enrichGuides(

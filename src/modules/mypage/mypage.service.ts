@@ -110,13 +110,17 @@ export class MyPageService {
       followerId: id,
     };
 
-    const guides = await this.guidesRepository.paginate(cursor, limit, options);
+    const { result: guides, count } = await this.guidesRepository.paginate(
+      cursor,
+      limit,
+      options,
+    );
     const response = createPageResponse(
       guides,
       { cursor, limit },
       guides.length,
     );
 
-    return response;
+    return { ...response, count };
   }
 }
