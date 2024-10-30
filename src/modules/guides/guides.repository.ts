@@ -84,7 +84,10 @@ export class GuidesRepository {
         },
       }),
       this.prismaService.guideProfile.count({
-        where: whereCondition,
+        where: {
+          ...whereCondition,
+          id: undefined,
+        },
       }),
     ]);
 
